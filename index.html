@@ -2737,10 +2737,12 @@ function initHW3D() {
       metalness: 0.8, roughness: 0.3, transparent: true, opacity: 1
     });
     const frontMat = new THREE.MeshStandardMaterial({
-      color: s.col,
+      color: 0xffffff,              // 白色不遮蓋紋理
       map: FACE_TEXTURES[idx],
-      emissive: s.emi, emissiveIntensity: s.emI,
-      metalness: 0.6, roughness: 0.2, transparent: true, opacity: 1
+      emissiveMap: FACE_TEXTURES[idx], // 同一張紋理做自發光 → 螢幕/電路板發光感
+      emissive: 0xffffff,
+      emissiveIntensity: 0.45,
+      metalness: 0.1, roughness: 0.45, transparent: true, opacity: 1
     });
     const backMat = new THREE.MeshStandardMaterial({
       color: s.col, emissive: s.emi, emissiveIntensity: s.emI * 0.4,
@@ -2927,8 +2929,8 @@ function initHW3D() {
         const mats = Array.isArray(o.mesh.material) ? o.mesh.material : [o.mesh.material];
         mats.forEach((m, mi) => {
           m.opacity = 1;
-          // 前面(index 4)保留完整 emI，側面用 0.6x，背面用 0.4x
-          m.emissiveIntensity = mi === 4 ? o.spec.emI : mi === 5 ? o.spec.emI * 0.4 : o.spec.emI * 0.6;
+          // 前面(index 4)固定 0.45 保持紋理亮度，側面/背面恢復 spec emI
+          m.emissiveIntensity = mi === 4 ? 0.45 : mi === 5 ? o.spec.emI * 0.4 : o.spec.emI * 0.6;
         });
       });
       hw3dSelectedIdx = -1;
@@ -2950,10 +2952,17 @@ function initHW3D() {
     layerObjs.forEach((o, j) => {
       const mats = Array.isArray(o.mesh.material) ? o.mesh.material : [o.mesh.material];
       if (j === i) {
-        mats.forEach(m => { m.opacity = 1; m.emissiveIntensity = o.spec.emI * 4 + 0.35; });
+        mats.forEach((m, mi) => {
+          m.opacity = 1;
+          // 前面用稍高但不過曝的強度，讓紋理亮起來；側面用強烈發光效果
+          m.emissiveIntensity = mi === 4 ? 0.65 : o.spec.emI * 4 + 0.35;
+        });
         o.targetZ = o.spec.zEx * 1.35; // 選中層往外拉
       } else {
-        mats.forEach(m => { m.opacity = 0.28; m.emissiveIntensity = o.spec.emI * 0.15; });
+        mats.forEach((m, mi) => {
+          m.opacity = 0.28;
+          m.emissiveIntensity = mi === 4 ? 0.15 : o.spec.emI * 0.15;
+        });
         o.targetZ = o.spec.zEx;
       }
     });
