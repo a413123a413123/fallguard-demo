@@ -2255,6 +2255,201 @@ function initHW3D() {
   phoneGroup.rotation.y = -0.3;
   scene.add(phoneGroup);
 
+  /* ── Canvas Texture Generators ── */
+  function makeTex(w, h, drawFn) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    drawFn(ctx, w, h);
+    const tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return tex;
+  }
+
+  // ── Display Layer ──
+  const texDisplay = makeTex(512, 1024, (ctx, w, h) => {
+    ctx.fillStyle = '#0a1520';
+    ctx.fillRect(0, 0, w, h);
+    // Screen glass area
+    const grd = ctx.createRadialGradient(w/2, h/2, h*0.05, w/2, h/2, h*0.6);
+    grd.addColorStop(0, 'rgba(30,60,110,0.55)');
+    grd.addColorStop(1, 'rgba(5,15,35,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(24, 80, w-48, h-160);
+    // Pixel micro-grid
+    ctx.strokeStyle = 'rgba(100,160,220,0.07)';
+    ctx.lineWidth = 0.8;
+    for (let x = 24; x < w-24; x += 5) { ctx.beginPath(); ctx.moveTo(x,80); ctx.lineTo(x,h-80); ctx.stroke(); }
+    for (let y = 80; y < h-80; y += 5) { ctx.beginPath(); ctx.moveTo(24,y); ctx.lineTo(w-24,y); ctx.stroke(); }
+    // Dynamic island
+    ctx.fillStyle = '#040c1a';
+    ctx.beginPath();
+    ctx.roundRect(w/2-42, 48, 84, 36, 18);
+    ctx.fill();
+    // Front camera iris
+    ctx.beginPath(); ctx.arc(w/2+18, 66, 10, 0, Math.PI*2);
+    ctx.fillStyle = '#0a1a2e'; ctx.fill();
+    ctx.beginPath(); ctx.arc(w/2+18, 66, 5, 0, Math.PI*2);
+    ctx.fillStyle = '#1a3050'; ctx.fill();
+    // Screen bezel highlight
+    ctx.strokeStyle = 'rgba(80,140,200,0.25)'; ctx.lineWidth = 3;
+    ctx.strokeRect(24, 80, w-48, h-160);
+  });
+
+  // ── SoC Layer ──
+  const texSoC = makeTex(512, 1024, (ctx, w, h) => {
+    ctx.fillStyle = '#001525';
+    ctx.fillRect(0, 0, w, h);
+    // Fine cyan circuit grid
+    ctx.strokeStyle = 'rgba(0,180,255,0.12)'; ctx.lineWidth = 1;
+    for (let x = 0; x < w; x += 32) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for (let y = 0; y < h; y += 32) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+    // Horizontal routing traces
+    ctx.strokeStyle = 'rgba(0,160,220,0.35)'; ctx.lineWidth = 2;
+    [h*0.22, h*0.48, h*0.74].forEach(y => {
+      ctx.beginPath(); ctx.moveTo(32,y); ctx.lineTo(w-32,y); ctx.stroke();
+    });
+    // Bond pads on all 4 edges
+    ctx.fillStyle = 'rgba(0,220,255,0.55)';
+    for (let i = 0; i < 18; i++) {
+      const t = 20 + i*(h/18);
+      ctx.fillRect(3, t, 9, 5); ctx.fillRect(w-12, t, 9, 5);
+    }
+    for (let i = 0; i < 9; i++) {
+      const x = 20 + i*(w/9);
+      ctx.fillRect(x, 3, 5, 9); ctx.fillRect(x, h-12, 5, 9);
+    }
+    // Main die outline
+    ctx.strokeStyle = 'rgba(0,200,255,0.5)'; ctx.lineWidth = 2;
+    ctx.strokeRect(w*0.2, h*0.28, w*0.6, h*0.24);
+    ctx.fillStyle = 'rgba(0,100,180,0.25)';
+    ctx.fillRect(w*0.2, h*0.28, w*0.6, h*0.24);
+    // Label: SoC
+    ctx.fillStyle = 'rgba(0,220,255,0.8)';
+    ctx.font = `bold ${w/7}px monospace`; ctx.textAlign = 'center';
+    ctx.fillText('A17 Pro', w/2, h*0.43);
+    // Sub-dies
+    [[w*0.15,h*0.55,w*0.32,h*0.1,'GPU'],[w*0.53,h*0.55,w*0.32,h*0.1,'NPU']].forEach(([dx,dy,dw,dh,label]) => {
+      ctx.fillStyle='rgba(0,80,140,0.3)'; ctx.fillRect(dx,dy,dw,dh);
+      ctx.strokeStyle='rgba(0,140,200,0.4)'; ctx.lineWidth=1.5; ctx.strokeRect(dx,dy,dw,dh);
+      ctx.fillStyle='rgba(0,180,220,0.7)'; ctx.font=`${w/13}px monospace`;
+      ctx.fillText(label, dx+dw/2, dy+dh*0.68);
+    });
+    // LPDDR pads (right side strip)
+    ctx.fillStyle = 'rgba(0,150,200,0.3)';
+    ctx.fillRect(w*0.72, h*0.68, w*0.2, h*0.18);
+    ctx.strokeStyle='rgba(0,180,230,0.4)'; ctx.lineWidth=1; ctx.strokeRect(w*0.72, h*0.68, w*0.2, h*0.18);
+    ctx.fillStyle='rgba(0,200,230,0.6)'; ctx.font=`${w/15}px monospace`;
+    ctx.fillText('LPDDR5', w*0.82, h*0.79);
+  });
+
+  // ── IMU Sensor Layer ──
+  const texIMU = makeTex(512, 1024, (ctx, w, h) => {
+    ctx.fillStyle = '#110d00';
+    ctx.fillRect(0, 0, w, h);
+    // Gold grid
+    ctx.strokeStyle = 'rgba(200,150,0,0.1)'; ctx.lineWidth = 1;
+    for (let x = 0; x < w; x += 28) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for (let y = 0; y < h; y += 28) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+    // Routing traces (3 main routes)
+    ctx.strokeStyle = 'rgba(200,140,0,0.45)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(0, h*0.35); ctx.lineTo(w*0.28, h*0.35); ctx.lineTo(w*0.28, h*0.42); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w, h*0.35); ctx.lineTo(w*0.72, h*0.35); ctx.lineTo(w*0.72, h*0.42); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w*0.5, 0); ctx.lineTo(w*0.5, h*0.35); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w*0.5, h*0.72); ctx.lineTo(w*0.5, h); ctx.stroke();
+    // MEMS chip main package
+    const mx=w*0.22, my=h*0.38, mw=w*0.56, mh=h*0.22;
+    ctx.fillStyle='rgba(180,120,0,0.3)'; ctx.fillRect(mx,my,mw,mh);
+    ctx.strokeStyle='#cc9900'; ctx.lineWidth=2.5; ctx.strokeRect(mx,my,mw,mh);
+    ctx.fillStyle='#ffcc00'; ctx.font=`bold ${w/8}px monospace`; ctx.textAlign='center';
+    ctx.fillText('IMU', w/2, my+mh*0.48);
+    ctx.fillStyle='rgba(255,200,0,0.65)'; ctx.font=`${w/14}px monospace`;
+    ctx.fillText('6-axis MEMS', w/2, my+mh*0.8);
+    // Axis arrows
+    [['±X','#ff6644'],['±Y','#44cc44'],['±Z','#4488ff']].forEach(([label,color],i)=>{
+      const cx=[w*0.18,w*0.5,w*0.82][i];
+      ctx.fillStyle=color; ctx.font=`bold ${w/12}px monospace`; ctx.textAlign='center';
+      ctx.fillText(label, cx, h*0.78);
+    });
+    // Solder pads (bond wires)
+    ctx.fillStyle='rgba(255,180,0,0.6)';
+    for(let i=0;i<8;i++){
+      ctx.fillRect(mx+i*(mw/8)+2, my-10, mw/8-4, 8);
+      ctx.fillRect(mx+i*(mw/8)+2, my+mh+2, mw/8-4, 8);
+    }
+  });
+
+  // ── Battery Layer ──
+  const texBattery = makeTex(512, 1024, (ctx, w, h) => {
+    ctx.fillStyle = '#001208';
+    ctx.fillRect(0, 0, w, h);
+    // Cell dividers
+    ctx.strokeStyle = 'rgba(0,180,80,0.35)'; ctx.lineWidth = 2.5;
+    [h*0.28, h*0.56, h*0.78].forEach(y => {
+      ctx.beginPath(); ctx.moveTo(30,y); ctx.lineTo(w-30,y); ctx.stroke();
+      // Dashed center detail
+      ctx.setLineDash([8,6]); ctx.strokeStyle='rgba(0,140,60,0.2)';
+      ctx.beginPath(); ctx.moveTo(60,y+20); ctx.lineTo(w-60,y+20); ctx.stroke();
+      ctx.setLineDash([]); ctx.strokeStyle='rgba(0,180,80,0.35)';
+    });
+    // Capacity text
+    ctx.fillStyle='rgba(0,210,100,0.55)';
+    ctx.font=`bold ${w/7}px sans-serif`; ctx.textAlign='center';
+    ctx.fillText('4422', w/2, h*0.48);
+    ctx.font=`${w/12}px sans-serif`;
+    ctx.fillText('mAh', w/2, h*0.56);
+    // Terminal pads (bottom)
+    ctx.fillStyle='rgba(220,200,0,0.65)';
+    [[w*0.3,h*0.88],[w*0.5,h*0.88],[w*0.7,h*0.88]].forEach(([px,py])=>{
+      ctx.fillRect(px-18, py, 36, 22);
+      ctx.strokeStyle='rgba(200,180,0,0.8)'; ctx.lineWidth=1.5; ctx.strokeRect(px-18,py,36,22);
+    });
+    // Border glow effect
+    const grd = ctx.createLinearGradient(0,0,0,h);
+    grd.addColorStop(0,'rgba(0,180,80,0.15)');
+    grd.addColorStop(0.5,'rgba(0,100,50,0)');
+    grd.addColorStop(1,'rgba(0,180,80,0.15)');
+    ctx.strokeStyle=grd; ctx.lineWidth=4;
+    ctx.strokeRect(10,10,w-20,h-20);
+  });
+
+  // ── PCB / Motherboard Layer ──
+  const texPCB = makeTex(512, 1024, (ctx, w, h) => {
+    ctx.fillStyle = '#001210';
+    ctx.fillRect(0, 0, w, h);
+    // Green traces - horizontal bus lines
+    ctx.strokeStyle = 'rgba(0,200,100,0.3)'; ctx.lineWidth = 2;
+    for(let y=40; y<h; y+=55){
+      ctx.beginPath(); ctx.moveTo(20,y);
+      for(let x=20;x<w;x+=70){
+        ctx.lineTo(x+35,y); ctx.lineTo(x+45,y+18); ctx.lineTo(x+55,y+18); ctx.lineTo(x+65,y);
+      }
+      ctx.stroke();
+    }
+    // Via holes
+    ctx.fillStyle='rgba(0,220,120,0.45)';
+    for(let x=35;x<w;x+=55) for(let y=65;y<h;y+=88){
+      ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='rgba(0,180,80,0.6)'; ctx.lineWidth=1; ctx.stroke();
+    }
+    // Mosfet / component pads
+    ctx.fillStyle='rgba(0,180,90,0.25)';
+    [[w*0.15,h*0.2],[w*0.6,h*0.35],[w*0.25,h*0.62],[w*0.7,h*0.72]].forEach(([cx,cy])=>{
+      ctx.fillRect(cx-18,cy-12,36,24);
+      ctx.strokeStyle='rgba(0,200,100,0.5)'; ctx.lineWidth=1.5; ctx.strokeRect(cx-18,cy-12,36,24);
+    });
+    // Connector row (top)
+    ctx.fillStyle='rgba(180,170,0,0.5)';
+    for(let i=0;i<12;i++) ctx.fillRect(30+i*36, 18, 22, 32);
+    ctx.strokeStyle='rgba(200,190,0,0.6)'; ctx.lineWidth=1;
+    for(let i=0;i<12;i++) ctx.strokeRect(30+i*36, 18, 22, 32);
+    // Board outline highlight
+    ctx.strokeStyle='rgba(0,200,100,0.2)'; ctx.lineWidth=6;
+    ctx.strokeRect(8,8,w-16,h-16);
+  });
+
+  const FACE_TEXTURES = [texDisplay, texSoC, texIMU, texBattery, texPCB];
+
   // 每層規格：沿 Z 軸堆疊（前面 = 高 Z）
   const SPECS = [
     { zStack: 0.28, zEx: 1.05, w:1.46, h:2.96, d:0.06, col:0x1e2d3d, emi:0x000000, emI:0.0, edgeC:0x3a5570 },
@@ -2264,21 +2459,132 @@ function initHW3D() {
     { zStack:-0.26, zEx:-1.05, w:1.44, h:2.92, d:0.09, col:0x001210, emi:0x002218, emI:0.2, edgeC:0x004433 },
   ];
 
-  const layerObjs = SPECS.map(s => {
-    const geo  = new THREE.BoxGeometry(s.w, s.h, s.d);
-    const mat  = new THREE.MeshStandardMaterial({
-      color: s.col, emissive: s.emi, emissiveIntensity: s.emI,
-      metalness: 0.75, roughness: 0.25, transparent: true, opacity: 1
+  const layerObjs = SPECS.map((s, idx) => {
+    const geo = new THREE.BoxGeometry(s.w, s.h, s.d);
+
+    // Per-face materials: side faces = plain, front (+z index 4) = textured
+    const sideMat = () => new THREE.MeshStandardMaterial({
+      color: s.col, emissive: s.emi, emissiveIntensity: s.emI * 0.6,
+      metalness: 0.8, roughness: 0.3, transparent: true, opacity: 1
     });
-    const mesh = new THREE.Mesh(geo, mat);
+    const frontMat = new THREE.MeshStandardMaterial({
+      color: s.col,
+      map: FACE_TEXTURES[idx],
+      emissive: s.emi, emissiveIntensity: s.emI,
+      metalness: 0.6, roughness: 0.2, transparent: true, opacity: 1
+    });
+    const backMat = new THREE.MeshStandardMaterial({
+      color: s.col, emissive: s.emi, emissiveIntensity: s.emI * 0.4,
+      metalness: 0.85, roughness: 0.25, transparent: true, opacity: 1
+    });
+    // BoxGeometry face order: +x, -x, +y, -y, +z(front), -z(back)
+    const materials = [sideMat(), sideMat(), sideMat(), sideMat(), frontMat, backMat];
+    const mesh = new THREE.Mesh(geo, materials);
     mesh.position.z = s.zStack;
     phoneGroup.add(mesh);
 
-    // 邊框線
+    // Edge outline
     const edges = new THREE.EdgesGeometry(geo);
     mesh.add(new THREE.LineSegments(edges,
-      new THREE.LineBasicMaterial({ color: s.edgeC, transparent: true, opacity: 0.9 })
+      new THREE.LineBasicMaterial({ color: s.edgeC, transparent: true, opacity: 0.85 })
     ));
+
+    // ── 3D Decorations per layer ──
+    const halfD = s.d / 2;
+
+    if (idx === 1) {
+      // SoC: raised chip packages on front face
+      const chipDefs = [
+        { x: 0,    y: 0.15,  w: 0.56, h: 0.56, d: 0.025, col: 0x001e32, emi: 0x003366, emI: 0.7 }, // main SoC die
+        { x:-0.38, y:-0.22,  w: 0.30, h: 0.30, d: 0.018, col: 0x001020, emi: 0x002244, emI: 0.5 }, // GPU
+        { x: 0.38, y:-0.22,  w: 0.30, h: 0.30, d: 0.018, col: 0x001020, emi: 0x003322, emI: 0.5 }, // NPU
+        { x: 0,    y:-0.85,  w: 0.60, h: 0.20, d: 0.014, col: 0x000c18, emi: 0x001a30, emI: 0.3 }, // LPDDR5
+      ];
+      chipDefs.forEach(cd => {
+        const cg = new THREE.BoxGeometry(cd.w, cd.h, cd.d);
+        const cm = new THREE.MeshStandardMaterial({
+          color: cd.col, emissive: cd.emi, emissiveIntensity: cd.emI,
+          metalness: 0.9, roughness: 0.1, transparent: true, opacity: 1
+        });
+        const chip = new THREE.Mesh(cg, cm);
+        chip.position.set(cd.x, cd.y, halfD + cd.d / 2 + 0.001);
+        mesh.add(chip);
+        // Chip edge lines
+        chip.add(new THREE.LineSegments(
+          new THREE.EdgesGeometry(cg),
+          new THREE.LineBasicMaterial({ color: s.edgeC, opacity: 0.7, transparent: true })
+        ));
+      });
+    }
+
+    if (idx === 4) {
+      // PCB: connector strip along top + capacitors
+      // Connector strip
+      const connGeo = new THREE.BoxGeometry(1.1, 0.14, 0.03);
+      const connMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 });
+      const conn = new THREE.Mesh(connGeo, connMat);
+      conn.position.set(0, 1.35, halfD + 0.016);
+      mesh.add(conn);
+      // Connector pins
+      for (let i = -5; i <= 5; i++) {
+        const pin = new THREE.Mesh(
+          new THREE.BoxGeometry(0.06, 0.1, 0.035),
+          new THREE.MeshStandardMaterial({ color: 0xccbb00, metalness: 1, roughness: 0.05 })
+        );
+        pin.position.set(i * 0.094, 1.35, halfD + 0.033);
+        mesh.add(pin);
+      }
+      // SMD capacitors (small cylinders)
+      const capGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.035, 8);
+      const capMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.3 });
+      [[-0.5, 0.6], [0.1, 0.6], [0.5, 0.2], [-0.3, -0.4], [0.4, -0.8]].forEach(([cx, cy]) => {
+        const cap = new THREE.Mesh(capGeo, capMat);
+        cap.rotation.x = Math.PI / 2;
+        cap.position.set(cx, cy, halfD + 0.019);
+        mesh.add(cap);
+      });
+    }
+
+    if (idx === 2) {
+      // IMU: tiny MEMS package bump
+      const mems = new THREE.Mesh(
+        new THREE.BoxGeometry(0.28, 0.28, 0.022),
+        new THREE.MeshStandardMaterial({ color: 0x1a1000, emissive: 0x664400, emissiveIntensity: 0.6, metalness: 0.85, roughness: 0.15 })
+      );
+      mems.position.set(0, 0, halfD + 0.012);
+      mesh.add(mems);
+      mems.add(new THREE.LineSegments(
+        new THREE.EdgesGeometry(mems.geometry),
+        new THREE.LineBasicMaterial({ color: 0xcc9900, opacity: 0.9, transparent: true })
+      ));
+    }
+
+    if (idx === 0) {
+      // Display: front glass highlight border
+      const borderGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(s.w - 0.04, s.h - 0.04, s.d + 0.002));
+      mesh.add(new THREE.LineSegments(borderGeo,
+        new THREE.LineBasicMaterial({ color: 0x4488cc, opacity: 0.45, transparent: true })
+      ));
+      // Dynamic island pill shape (using thin box)
+      const island = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, 0.06, 0.01),
+        new THREE.MeshStandardMaterial({ color: 0x040c1a, metalness: 0.5 })
+      );
+      island.position.set(0, s.h/2 - 0.14, halfD + 0.006);
+      mesh.add(island);
+    }
+
+    if (idx === 3) {
+      // Battery: terminal tab bumps
+      [[-0.3, -1.25], [0, -1.25], [0.3, -1.25]].forEach(([bx, by]) => {
+        const tab = new THREE.Mesh(
+          new THREE.BoxGeometry(0.1, 0.06, 0.015),
+          new THREE.MeshStandardMaterial({ color: 0xaaaa00, metalness: 1, roughness: 0.05 })
+        );
+        tab.position.set(bx, by, halfD + 0.009);
+        mesh.add(tab);
+      });
+    }
 
     return { mesh, spec: s, targetZ: s.zStack };
   });
@@ -2349,8 +2655,12 @@ function initHW3D() {
     if (!hw3dExploded) {
       // 收合：重置所有狀態
       layerObjs.forEach(o => {
-        o.mesh.material.opacity = 1;
-        o.mesh.material.emissiveIntensity = o.spec.emI;
+        const mats = Array.isArray(o.mesh.material) ? o.mesh.material : [o.mesh.material];
+        mats.forEach((m, mi) => {
+          m.opacity = 1;
+          // 前面(index 4)保留完整 emI，側面用 0.6x，背面用 0.4x
+          m.emissiveIntensity = mi === 4 ? o.spec.emI : mi === 5 ? o.spec.emI * 0.4 : o.spec.emI * 0.6;
+        });
       });
       hw3dSelectedIdx = -1;
       rotYTarget = -0.3; rotYCurrent = phoneGroup.rotation.y;
@@ -2369,13 +2679,12 @@ function initHW3D() {
 
     // 高亮選中層，淡化其他層
     layerObjs.forEach((o, j) => {
+      const mats = Array.isArray(o.mesh.material) ? o.mesh.material : [o.mesh.material];
       if (j === i) {
-        o.mesh.material.opacity = 1;
-        o.mesh.material.emissiveIntensity = o.spec.emI * 4 + 0.35;
+        mats.forEach(m => { m.opacity = 1; m.emissiveIntensity = o.spec.emI * 4 + 0.35; });
         o.targetZ = o.spec.zEx * 1.35; // 選中層往外拉
       } else {
-        o.mesh.material.opacity = 0.28;
-        o.mesh.material.emissiveIntensity = o.spec.emI * 0.15;
+        mats.forEach(m => { m.opacity = 0.28; m.emissiveIntensity = o.spec.emI * 0.15; });
         o.targetZ = o.spec.zEx;
       }
     });
