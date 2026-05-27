@@ -885,7 +885,77 @@ h2.sec-title {
 /* Layer active highlight when hovering legend */
 .legend-item.active-legend { border-color: var(--cyan) !important; }
 
+/* ══ HW3D ══ */
+.hw3d-wrap {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+  margin-top: 12px;
+}
+.hw3d-canvas-wrap {
+  position: relative;
+  background: radial-gradient(ellipse at 40% 50%, rgba(0,30,50,0.8), rgba(5,8,18,0.95));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  overflow: hidden;
+}
+#hw3d-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.hw3d-hint {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+.hw3d-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+.hw3d-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s, transform 0.2s;
+}
+.hw3d-item:hover { transform: translateX(4px); border-color: var(--border); }
+.hw3d-item.hw3d-active { border-color: var(--cyan); background: rgba(0,212,255,0.07); transform: translateX(6px); }
+.hw3d-item.hw3d-cyan { border-color: rgba(0,212,255,0.2); background: rgba(0,212,255,0.04); }
+.hw3d-item.hw3d-gold { border-color: rgba(255,208,96,0.2); background: rgba(255,208,96,0.04); }
+.hw3d-item.hw3d-active.hw3d-gold { border-color: var(--gold); background: rgba(255,208,96,0.1); }
+.hw3d-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.hw3d-info { display: flex; flex-direction: column; gap: 3px; }
+.hw3d-name { font-size: 13px; font-weight: 700; }
+.hw3d-sub  { font-size: 12px; color: var(--dim); }
+.hw3d-conclusion {
+  margin-top: 6px;
+  padding: 14px 16px;
+  background: rgba(0,230,118,0.04);
+  border: 1px solid rgba(0,230,118,0.2);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.9;
+}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
@@ -1361,122 +1431,66 @@ h2.sec-title {
      S7 — HARDWARE EXPLODED VIEW
 ══════════════════════════════════════════════════════ -->
 <section class="slide" id="s-hw">
-  <div class="slide-header">
+  <div>
     <span class="act-label">硬體解構 · 你已擁有的一切</span>
     <h2 class="sec-title">解構<span class="accent">你的口袋</span></h2>
   </div>
 
-  <div class="hw-explode-wrap">
-    <!-- 左：3D 爆炸圖 -->
-    <div class="explode-scene" id="explode-scene">
-      <div class="explode-phone" id="explode-phone">
-        <!-- 每層：由上到下 index 0-4 -->
-        <div class="e-layer" id="el0" data-z="200">
-          <div class="e-face">
-            <div class="e-face-content">
-              <span class="e-icon">🪟</span>
-              <span class="e-face-label">Display</span>
-            </div>
-          </div>
-          <div class="e-side-top"></div>
-          <div class="e-side-left"></div>
-        </div>
-        <div class="e-layer layer-soc" id="el1" data-z="100">
-          <div class="e-face">
-            <div class="e-face-content">
-              <div class="chip-grid"></div>
-              <span class="e-face-label soc-label">SoC</span>
-            </div>
-          </div>
-          <div class="e-side-top"></div>
-          <div class="e-side-left"></div>
-        </div>
-        <div class="e-layer layer-imu" id="el2" data-z="0">
-          <div class="e-face">
-            <div class="e-face-content">
-              <span class="e-icon">📡</span>
-              <span class="e-face-label imu-label">IMU</span>
-            </div>
-          </div>
-          <div class="e-side-top"></div>
-          <div class="e-side-left"></div>
-        </div>
-        <div class="e-layer layer-bat" id="el3" data-z="-100">
-          <div class="e-face">
-            <div class="e-face-content">
-              <span class="e-icon">🔋</span>
-              <span class="e-face-label">Battery</span>
-            </div>
-          </div>
-          <div class="e-side-top"></div>
-          <div class="e-side-left"></div>
-        </div>
-        <div class="e-layer layer-pcb" id="el4" data-z="-200">
-          <div class="e-face">
-            <div class="e-face-content">
-              <div class="pcb-pattern"></div>
-              <span class="e-face-label">PCB</span>
-            </div>
-          </div>
-          <div class="e-side-top"></div>
-          <div class="e-side-left"></div>
-        </div>
+  <div class="hw3d-wrap">
+    <div class="hw3d-canvas-wrap" id="hw3d-canvas-wrap">
+      <canvas id="hw3d-canvas"></canvas>
+      <div class="hw3d-hint" id="hw3d-hint">
+        <span class="kbd">Space</span> 分解 &nbsp;·&nbsp; 點右側圖層旋轉鏡頭
       </div>
     </div>
 
-    <!-- 右：圖例 -->
-    <div class="explode-legend" id="explode-legend">
-      <div class="legend-item" data-layer="0">
-        <div class="legend-dot" style="background:#aabbcc"></div>
-        <div>
-          <div class="legend-name">Display</div>
-          <div class="legend-sub">你的螢幕</div>
+    <div class="hw3d-legend">
+      <div class="hw3d-item" data-idx="0">
+        <div class="hw3d-dot" style="background:#3a5570"></div>
+        <div class="hw3d-info">
+          <span class="hw3d-name">Display</span>
+          <span class="hw3d-sub">OLED 顯示層</span>
         </div>
       </div>
-      <div class="legend-item legend-highlight" data-layer="1">
-        <div class="legend-dot" style="background:var(--cyan)"></div>
-        <div>
-          <div class="legend-name accent">SoC · CPU · GPU · NPU</div>
-          <div class="legend-sub accent">✦ ONNX Runtime 推論在這裡 · 0.17ms</div>
+      <div class="hw3d-item hw3d-cyan" data-idx="1">
+        <div class="hw3d-dot" style="background:var(--cyan)"></div>
+        <div class="hw3d-info">
+          <span class="hw3d-name accent">SoC &nbsp;·&nbsp; CPU &nbsp;·&nbsp; GPU &nbsp;·&nbsp; NPU</span>
+          <span class="hw3d-sub" style="color:var(--cyan)">✦ ONNX Runtime 在這裡推論 · 0.17ms</span>
         </div>
       </div>
-      <div class="legend-item legend-highlight" data-layer="2">
-        <div class="legend-dot" style="background:var(--gold)"></div>
-        <div>
-          <div class="legend-name gold">IMU Sensor</div>
-          <div class="legend-sub gold">✦ 200Hz 加速度計 + 陀螺儀</div>
+      <div class="hw3d-item hw3d-gold" data-idx="2">
+        <div class="hw3d-dot" style="background:var(--gold)"></div>
+        <div class="hw3d-info">
+          <span class="hw3d-name gold">IMU Sensor</span>
+          <span class="hw3d-sub gold">✦ 200Hz 加速度計 + 陀螺儀</span>
         </div>
       </div>
-      <div class="legend-item" data-layer="3">
-        <div class="legend-dot" style="background:#44aa66"></div>
-        <div>
-          <div class="legend-name">Battery</div>
-          <div class="legend-sub">推論 0.17ms · 功耗可忽略</div>
+      <div class="hw3d-item" data-idx="3">
+        <div class="hw3d-dot" style="background:#00663a"></div>
+        <div class="hw3d-info">
+          <span class="hw3d-name">Battery</span>
+          <span class="hw3d-sub">功耗可忽略 · 推論僅 0.17ms</span>
         </div>
       </div>
-      <div class="legend-item" data-layer="4">
-        <div class="legend-dot" style="background:#336655"></div>
-        <div>
-          <div class="legend-name">Motherboard</div>
-          <div class="legend-sub">所有元件已整合，無需額外採購</div>
+      <div class="hw3d-item" data-idx="4">
+        <div class="hw3d-dot" style="background:#004433"></div>
+        <div class="hw3d-info">
+          <span class="hw3d-name">Motherboard</span>
+          <span class="hw3d-sub">所有元件已整合，無需額外採購</span>
         </div>
       </div>
 
-      <div class="explode-cta" id="explode-cta">
-        <span>點擊裝置或按</span>
-        <kbd class="kbd">Space</kbd>
-        <span>分解</span>
-      </div>
-
-      <div class="explode-conclusion">
-        <span class="green" style="font-size:15px;font-weight:700">846 KB model</span>
-        <span style="color:var(--dim)"> + ONNX Runtime Android SDK + </span>
+      <div class="hw3d-conclusion">
+        <span class="green" style="font-weight:700">846 KB</span>
+        <span class="dim-c"> model &nbsp;+&nbsp; ONNX Runtime Android SDK &nbsp;+&nbsp; </span>
         <span class="accent" style="font-weight:700">你的手機</span>
-        <span style="color:var(--dim)"> = 完整跌倒偵測系統</span>
+        <div style="margin-top:6px;font-size:13px;color:var(--green)">= 完整跌倒偵測系統，零額外採購</div>
       </div>
     </div>
   </div>
-  <div class="cue-bar">點擊手機或按 Space 觸發分解動畫 · 再按一次還原</div>
+
+  <div class="cue-bar">Space 分解 · 點右側圖層鏡頭自動旋轉到該層 · 再按 Space 換下一頁</div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════
@@ -1667,8 +1681,8 @@ function onEnter(n) {
     stopFeedAnim();    // 離開 S5 停止日誌
   }
   if (n === 5) { noHwShown = false; }
-  // s-hw：硬體解構爆炸圖
-  if (SLIDES[n] && SLIDES[n].id === 's-hw') initExplodeSlide();
+  // s-hw：硬體解構爆炸圖（Three.js 版）
+  if (SLIDES[n] && SLIDES[n].id === 's-hw') { initHW3D(); }
   // s7（原 s7）：佛偈逐行顯示
   if (SLIDES[n] && SLIDES[n].id === 's7') {
     punchShown = false;
@@ -2113,10 +2127,18 @@ document.addEventListener('keydown', e => {
       noHwShown = true;
       return;
     }
-    // s-hw：Space 先觸發分解動畫，已分解則換頁
-    if (SLIDES[cur] && SLIDES[cur].id === 's-hw' && !hwExploded) {
-      toggleExplode();
-      return;
+    // s-hw：第一次 Space → 分解展開，停留；第二次 Space → 收合後換頁
+    if (SLIDES[cur] && SLIDES[cur].id === 's-hw') {
+      if (!hw3dExploded) {
+        // 第一次：展開
+        if (hw3d) hw3d.toggleExplode();
+        return;
+      } else {
+        // 第二次：收合後換下一頁
+        if (hw3d) hw3d.toggleExplode();
+        nav(1);
+        return;
+      }
     }
     // s7（佛偈）：Space 先顯示 punchline
     if (SLIDES[cur] && SLIDES[cur].id === 's7' && !punchShown) {
@@ -2180,52 +2202,236 @@ document.addEventListener('touchend', e => {
 });
 
 /* ══════════════════════════════════════════════════════
-   EXPLODED VIEW
+   THREE.JS PHONE EXPLODED VIEW
 ══════════════════════════════════════════════════════ */
-let hwExploded = false;
+let hw3d = null;
+let hw3dExploded = false;
+let hw3dSelectedIdx = -1;
 
-function toggleExplode() {
-  hwExploded = !hwExploded;
-  const layers = document.querySelectorAll('.e-layer');
-  layers.forEach((layer, i) => {
-    if (hwExploded) {
-      // 錯開時間，讓分解有動態感
-      setTimeout(() => layer.classList.add(`exploded-${i}`), i * 80);
+function initHW3D() {
+  const canvas = document.getElementById('hw3d-canvas');
+  if (!canvas || typeof THREE === 'undefined') return;
+
+  // 銷毀上一個實例
+  if (hw3d) { hw3d.dispose(); hw3d = null; }
+  hw3dExploded = false;
+  hw3dSelectedIdx = -1;
+
+  // 重置圖例
+  document.querySelectorAll('.hw3d-item').forEach(el => el.classList.remove('hw3d-active'));
+
+  const wrap = document.getElementById('hw3d-canvas-wrap');
+  const W = wrap.clientWidth || 500;
+  const H = wrap.clientHeight || 440;
+  canvas.width  = W * Math.min(window.devicePixelRatio, 2);
+  canvas.height = H * Math.min(window.devicePixelRatio, 2);
+
+  // ── Scene & Renderer ──
+  const scene = new THREE.Scene();
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+
+  // ── Camera ──
+  const camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 100);
+  const defaultCamPos = new THREE.Vector3(2.6, 0.3, 6.0);
+  camera.position.copy(defaultCamPos);
+  camera.lookAt(0, 0, 0);
+
+  // ── Lights ──
+  scene.add(new THREE.AmbientLight(0x223344, 2.5));
+  const sun = new THREE.DirectionalLight(0xffffff, 5);
+  sun.position.set(4, 6, 5);
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x3355aa, 2);
+  fill.position.set(-3, 1, 2);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0x00ccff, 1.2);
+  rim.position.set(0, -3, -3);
+  scene.add(rim);
+
+  // ── Phone Group ──
+  const phoneGroup = new THREE.Group();
+  phoneGroup.rotation.y = -0.3;
+  scene.add(phoneGroup);
+
+  // 每層規格：沿 Z 軸堆疊（前面 = 高 Z）
+  const SPECS = [
+    { zStack: 0.28, zEx: 1.05, w:1.46, h:2.96, d:0.06, col:0x1e2d3d, emi:0x000000, emI:0.0, edgeC:0x3a5570 },
+    { zStack: 0.18, zEx: 0.58, w:1.44, h:2.90, d:0.09, col:0x001e34, emi:0x0055bb, emI:0.6, edgeC:0x00aadd },
+    { zStack: 0.06, zEx: 0.16, w:1.44, h:2.90, d:0.05, col:0x1a1100, emi:0x553300, emI:0.5, edgeC:0xbb8800 },
+    { zStack:-0.08, zEx:-0.52, w:1.42, h:2.88, d:0.15, col:0x001508, emi:0x003322, emI:0.2, edgeC:0x006633 },
+    { zStack:-0.26, zEx:-1.05, w:1.44, h:2.92, d:0.09, col:0x001210, emi:0x002218, emI:0.2, edgeC:0x004433 },
+  ];
+
+  const layerObjs = SPECS.map(s => {
+    const geo  = new THREE.BoxGeometry(s.w, s.h, s.d);
+    const mat  = new THREE.MeshStandardMaterial({
+      color: s.col, emissive: s.emi, emissiveIntensity: s.emI,
+      metalness: 0.75, roughness: 0.25, transparent: true, opacity: 1
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.z = s.zStack;
+    phoneGroup.add(mesh);
+
+    // 邊框線
+    const edges = new THREE.EdgesGeometry(geo);
+    mesh.add(new THREE.LineSegments(edges,
+      new THREE.LineBasicMaterial({ color: s.edgeC, transparent: true, opacity: 0.9 })
+    ));
+
+    return { mesh, spec: s, targetZ: s.zStack };
+  });
+
+  // 外框輪廓
+  const frameGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.54, 3.04, 0.64));
+  phoneGroup.add(new THREE.LineSegments(frameGeo,
+    new THREE.LineBasicMaterial({ color: 0x3a5a7a, transparent: true, opacity: 0.35 })
+  ));
+
+  // ── 動畫狀態 ──
+  let rotYTarget  = -0.3;
+  let rotYCurrent = -0.3;
+  let autoRotate  = true;
+
+  const camPosTarget  = defaultCamPos.clone();
+  const camLookTarget = new THREE.Vector3(0, 0, 0);
+  const camPosCurrent = defaultCamPos.clone();
+  const camLookCurrent= new THREE.Vector3(0, 0, 0);
+
+  // 每層的鏡頭預設（position, lookAt）
+  const CAM = [
+    { p: new THREE.Vector3(0.3, 0.5, 6.5),  l: new THREE.Vector3(0, 0,  1.0) }, // Display
+    { p: new THREE.Vector3(2.8, 0.3, 5.8),  l: new THREE.Vector3(0, 0,  0.5) }, // SoC
+    { p: new THREE.Vector3(3.2, 0,   5.2),  l: new THREE.Vector3(0, 0,  0.1) }, // IMU
+    { p: new THREE.Vector3(2.8,-0.3, 5.8),  l: new THREE.Vector3(0, 0, -0.5) }, // Battery
+    { p: new THREE.Vector3(0.3,-0.5, 6.5),  l: new THREE.Vector3(0, 0, -1.0) }, // PCB
+  ];
+  // 每層的 Phone Y 旋轉
+  const ROT_Y = [-0.1, -0.25, -0.35, -0.45, -0.6];
+
+  // ── Render Loop ──
+  let rafId, alive = true;
+  function loop() {
+    if (!alive) return;
+    rafId = requestAnimationFrame(loop);
+
+    // 閒置時自動旋轉
+    if (autoRotate) {
+      phoneGroup.rotation.y += 0.005;
     } else {
-      layer.classList.remove(`exploded-0`,`exploded-1`,`exploded-2`,`exploded-3`,`exploded-4`);
+      rotYCurrent += (rotYTarget - rotYCurrent) * 0.06;
+      phoneGroup.rotation.y = rotYCurrent;
     }
-  });
-  const cta = document.getElementById('explode-cta');
-  if (cta) cta.style.opacity = hwExploded ? '0' : '1';
-}
 
-function initExplodeSlide() {
-  hwExploded = false;
-  // 重置所有圖層
-  document.querySelectorAll('.e-layer').forEach(l => {
-    l.classList.remove('exploded-0','exploded-1','exploded-2','exploded-3','exploded-4');
-  });
-  const cta = document.getElementById('explode-cta');
-  if (cta) cta.style.opacity = '1';
+    // 平滑分層 Z 位移
+    layerObjs.forEach(o => {
+      o.mesh.position.z += (o.targetZ - o.mesh.position.z) * 0.08;
+    });
 
-  // 點擊手機觸發分解
-  const scene = document.getElementById('explode-scene');
-  if (scene) {
-    scene.onclick = (e) => { e.stopPropagation(); toggleExplode(); };
+    // 平滑鏡頭
+    camPosCurrent.lerp(camPosTarget, 0.055);
+    camLookCurrent.lerp(camLookTarget, 0.055);
+    camera.position.copy(camPosCurrent);
+    camera.lookAt(camLookCurrent);
+
+    renderer.render(scene, camera);
+  }
+  loop();
+
+  // ── 公開方法 ──
+  function toggleExplode() {
+    hw3dExploded = !hw3dExploded;
+    autoRotate = !hw3dExploded;
+    layerObjs.forEach((o) => {
+      o.targetZ = hw3dExploded ? o.spec.zEx : o.spec.zStack;
+    });
+    if (!hw3dExploded) {
+      // 收合：重置所有狀態
+      layerObjs.forEach(o => {
+        o.mesh.material.opacity = 1;
+        o.mesh.material.emissiveIntensity = o.spec.emI;
+      });
+      hw3dSelectedIdx = -1;
+      rotYTarget = -0.3; rotYCurrent = phoneGroup.rotation.y;
+      camPosTarget.copy(defaultCamPos);
+      camLookTarget.set(0, 0, 0);
+      document.querySelectorAll('.hw3d-item').forEach(el => el.classList.remove('hw3d-active'));
+      const hint = document.getElementById('hw3d-hint');
+      if (hint) hint.style.opacity = '1';
+    }
   }
 
-  // 圖例 hover 高亮對應圖層
-  document.querySelectorAll('.legend-item').forEach((item, i) => {
-    item.onmouseenter = () => {
-      const layer = document.getElementById(`el${i}`);
-      if (layer) layer.style.filter = 'brightness(1.4)';
-    };
-    item.onmouseleave = () => {
-      const layer = document.getElementById(`el${i}`);
-      if (layer) layer.style.filter = '';
-    };
+  function selectLayer(i) {
+    if (!hw3dExploded) toggleExplode();
+    hw3dSelectedIdx = i;
+    autoRotate = false;
+
+    // 高亮選中層，淡化其他層
+    layerObjs.forEach((o, j) => {
+      if (j === i) {
+        o.mesh.material.opacity = 1;
+        o.mesh.material.emissiveIntensity = o.spec.emI * 4 + 0.35;
+        o.targetZ = o.spec.zEx * 1.35; // 選中層往外拉
+      } else {
+        o.mesh.material.opacity = 0.28;
+        o.mesh.material.emissiveIntensity = o.spec.emI * 0.15;
+        o.targetZ = o.spec.zEx;
+      }
+    });
+
+    // 鏡頭移動
+    camPosTarget.copy(CAM[i].p);
+    camLookTarget.copy(CAM[i].l);
+
+    // Phone 旋轉
+    rotYTarget = ROT_Y[i];
+    rotYCurrent = phoneGroup.rotation.y;
+
+    // 圖例高亮
+    document.querySelectorAll('.hw3d-item').forEach((el, j) => {
+      el.classList.toggle('hw3d-active', j === i);
+    });
+
+    const hint = document.getElementById('hw3d-hint');
+    if (hint) hint.style.opacity = '0';
+  }
+
+  function onResize() {
+    const W2 = wrap.clientWidth, H2 = wrap.clientHeight;
+    camera.aspect = W2 / H2;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W2, H2);
+  }
+
+  function dispose() {
+    alive = false;
+    cancelAnimationFrame(rafId);
+    scene.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        else obj.material.dispose();
+      }
+    });
+    renderer.dispose();
+  }
+
+  // Canvas 點擊 → 分解
+  wrap.onclick = (e) => { e.stopPropagation(); toggleExplode(); };
+
+  // 圖例點擊
+  document.querySelectorAll('.hw3d-item').forEach((el, i) => {
+    el.onclick = (e) => { e.stopPropagation(); selectLayer(i); };
   });
+
+  hw3d = { toggleExplode, selectLayer, dispose, onResize };
 }
+
+/* legacy toggleExplode / initExplodeSlide — no longer used */
+let hwExploded = false;
+function toggleExplode() { /* legacy - no longer used */ }
+function initExplodeSlide() { /* legacy - no longer used */ }
 
 /* ══════════════════════════════════════════════════════
    INIT
