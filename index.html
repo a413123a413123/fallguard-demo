@@ -2719,13 +2719,18 @@ function initHW3D() {
 
   // (all textures now defined above via SVG loadSvg calls)
 
-  // 每層規格：沿 Z 軸堆疊（前面 = 高 Z）
+  // 每層規格：側面顏色對齊 SVG 配色，厚度對應實體元件
   const SPECS = [
-    { zStack: 0.28, zEx: 1.05, w:1.46, h:2.96, d:0.06, col:0x1e2d3d, emi:0x000000, emI:0.0, edgeC:0x3a5570 },
-    { zStack: 0.18, zEx: 0.58, w:1.44, h:2.90, d:0.09, col:0x001e34, emi:0x0055bb, emI:0.6, edgeC:0x00aadd },
-    { zStack: 0.06, zEx: 0.16, w:1.44, h:2.90, d:0.05, col:0x1a1100, emi:0x553300, emI:0.5, edgeC:0xbb8800 },
-    { zStack:-0.08, zEx:-0.52, w:1.42, h:2.88, d:0.15, col:0x001508, emi:0x003322, emI:0.2, edgeC:0x006633 },
-    { zStack:-0.26, zEx:-1.05, w:1.44, h:2.92, d:0.09, col:0x001210, emi:0x002218, emI:0.2, edgeC:0x004433 },
+    // Display：OLED 螢幕 — 黑玻璃邊框，藍色邊光（SVG 背景 #060e20，波形藍 #4488ff）
+    { zStack: 0.28, zEx: 1.05, w:1.46, h:2.96, d:0.022, col:0x060e1a, emi:0x1a3a70, emI:0.5, edgeC:0x4488cc },
+    // SoC：A17 Pro 晶片 — 深綠 PCB 底色，綠邊光（SVG PCB 底 #0a1e0a，邊線 #339933）
+    { zStack: 0.18, zEx: 0.58, w:1.44, h:2.90, d:0.028, col:0x081808, emi:0x1a5a1a, emI:0.5, edgeC:0x33aa44 },
+    // IMU：MEMS 陶瓷封裝 — 深琥珀，金色邊（SVG 底 #0a0900，接點色 #cc9900）
+    { zStack: 0.06, zEx: 0.16, w:1.44, h:2.90, d:0.018, col:0x100b00, emi:0x5a3a00, emI:0.5, edgeC:0xcc8800 },
+    // Battery：Li-ion 電池 — 金屬灰鋁箔，綠極耳（SVG 電極 #4caf50，鋁箔 #888）
+    { zStack:-0.08, zEx:-0.52, w:1.42, h:2.88, d:0.065, col:0x1a1e1a, emi:0x1a4a1a, emI:0.3, edgeC:0x44bb55 },
+    // PCB：綠色 FR4 基板 — 深綠邊，亮綠邊光（SVG 底 #0a1e0a，trace #339933）
+    { zStack:-0.26, zEx:-1.05, w:1.44, h:2.92, d:0.038, col:0x0a1a08, emi:0x1a4a0a, emI:0.4, edgeC:0x22bb22 },
   ];
 
   const layerObjs = SPECS.map((s, idx) => {
@@ -2861,7 +2866,7 @@ function initHW3D() {
   });
 
   // 外框輪廓
-  const frameGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.54, 3.04, 0.64));
+  const frameGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.54, 3.04, 0.38));
   phoneGroup.add(new THREE.LineSegments(frameGeo,
     new THREE.LineBasicMaterial({ color: 0x3a5a7a, transparent: true, opacity: 0.35 })
   ));
