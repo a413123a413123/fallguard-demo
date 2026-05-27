@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.pth
+*.onnx
+*.engine
+results/
+.venv/
+*.log
+make_script_docx.py
+verify_docx*.py
+temp_check*.txt
+展示流程腳本.docx
+src/
