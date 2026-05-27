@@ -2255,200 +2255,469 @@ function initHW3D() {
   phoneGroup.rotation.y = -0.3;
   scene.add(phoneGroup);
 
-  /* ── Canvas Texture Generators ── */
-  function makeTex(w, h, drawFn) {
+  /* ── Component Layer Textures (SVG engineering illustrations) ── */
+  // Each canvas holds the SVG once loaded; Three.js texture refs same canvas.
+  const texCanvases = Array.from({length: 5}, (_, i) => {
     const c = document.createElement('canvas');
-    c.width = w; c.height = h;
+    c.width = 512; c.height = 1024;
     const ctx = c.getContext('2d');
-    drawFn(ctx, w, h);
+    const bg = ['#0a1520','#0a0815','#0a0900','#000e04','#000806'][i];
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, 512, 1024);
+    return c;
+  });
+  const FACE_TEXTURES = texCanvases.map(c => {
     const tex = new THREE.CanvasTexture(c);
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     return tex;
+  });
+  function loadSvg(svgStr, idx) {
+    const img = new Image();
+    img.onload = () => {
+      const ctx = texCanvases[idx].getContext('2d');
+      ctx.clearRect(0, 0, 512, 1024);
+      ctx.drawImage(img, 0, 0, 512, 1024);
+      FACE_TEXTURES[idx].needsUpdate = true;
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
   }
 
-  // ── Display Layer ──
-  const texDisplay = makeTex(512, 1024, (ctx, w, h) => {
-    ctx.fillStyle = '#0a1520';
-    ctx.fillRect(0, 0, w, h);
-    // Screen glass area
-    const grd = ctx.createRadialGradient(w/2, h/2, h*0.05, w/2, h/2, h*0.6);
-    grd.addColorStop(0, 'rgba(30,60,110,0.55)');
-    grd.addColorStop(1, 'rgba(5,15,35,0)');
-    ctx.fillStyle = grd;
-    ctx.fillRect(24, 80, w-48, h-160);
-    // Pixel micro-grid
-    ctx.strokeStyle = 'rgba(100,160,220,0.07)';
-    ctx.lineWidth = 0.8;
-    for (let x = 24; x < w-24; x += 5) { ctx.beginPath(); ctx.moveTo(x,80); ctx.lineTo(x,h-80); ctx.stroke(); }
-    for (let y = 80; y < h-80; y += 5) { ctx.beginPath(); ctx.moveTo(24,y); ctx.lineTo(w-24,y); ctx.stroke(); }
-    // Dynamic island
-    ctx.fillStyle = '#040c1a';
-    ctx.beginPath();
-    ctx.roundRect(w/2-42, 48, 84, 36, 18);
-    ctx.fill();
-    // Front camera iris
-    ctx.beginPath(); ctx.arc(w/2+18, 66, 10, 0, Math.PI*2);
-    ctx.fillStyle = '#0a1a2e'; ctx.fill();
-    ctx.beginPath(); ctx.arc(w/2+18, 66, 5, 0, Math.PI*2);
-    ctx.fillStyle = '#1a3050'; ctx.fill();
-    // Screen bezel highlight
-    ctx.strokeStyle = 'rgba(80,140,200,0.25)'; ctx.lineWidth = 3;
-    ctx.strokeRect(24, 80, w-48, h-160);
-  });
+  /* ── 0: Display — FallGuard app on OLED screen ── */
+  loadSvg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 1024">
+  <defs>
+    <linearGradient id="scr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#060e20"/><stop offset="100%" stop-color="#030810"/>
+    </linearGradient>
+    <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#220040"/><stop offset="50%" stop-color="#3d0060"/><stop offset="100%" stop-color="#220040"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="1024" fill="#000" rx="20"/>
+  <rect x="22" y="52" width="468" height="920" rx="10" fill="url(#scr)"/>
+  <rect x="191" y="64" width="130" height="38" rx="19" fill="#000"/>
+  <circle cx="300" cy="83" r="13" fill="#060610"/><circle cx="300" cy="83" r="8" fill="#0a0a20"/>
+  <circle cx="300" cy="83" r="4" fill="#151540"/><circle cx="303" cy="80" r="1.5" fill="#fff" opacity="0.4"/>
+  <text x="38" y="118" fill="#fff" font-size="18" font-family="Arial,sans-serif" font-weight="600">9:41</text>
+  <g fill="#fff"><rect x="410" y="113" width="5" height="7" rx="1"/><rect x="418" y="110" width="5" height="10" rx="1"/><rect x="426" y="106" width="5" height="14" rx="1"/><rect x="434" y="102" width="5" height="18" rx="1"/></g>
+  <rect x="447" y="107" width="28" height="14" rx="3" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" fill="none"/>
+  <rect x="475" y="112" width="3" height="5" rx="1" fill="rgba(255,255,255,0.5)"/>
+  <rect x="449" y="109" width="20" height="10" rx="2" fill="#4caf50"/>
+  <rect x="22" y="136" width="468" height="68" fill="url(#hdr)"/>
+  <line x1="22" y1="204" x2="490" y2="204" stroke="#5500aa" stroke-width="1"/>
+  <circle cx="60" cy="170" r="20" fill="#cc3366"/>
+  <path d="M60,152 L74,157 L74,169 Q74,179 60,185 Q46,179 46,169 L46,157 Z" fill="#fff" opacity="0.9"/>
+  <text x="240" y="165" fill="#fff" font-size="20" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">FallGuard</text>
+  <text x="240" y="187" fill="#cc88ff" font-size="12" font-family="Arial,sans-serif" text-anchor="middle">Real-time Fall Detection</text>
+  <rect x="36" y="216" width="440" height="44" rx="22" fill="#001a08" stroke="#00aa44" stroke-width="1.5"/>
+  <circle cx="68" cy="238" r="10" fill="#00cc55"/><circle cx="68" cy="238" r="5" fill="#00ff77"/>
+  <text x="256" y="244" fill="#00ee66" font-size="16" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">MONITORING ACTIVE</text>
+  <text x="38" y="282" fill="#446688" font-size="11" font-family="monospace">IMU / Accelerometer Stream  200 Hz</text>
+  <rect x="28" y="290" width="456" height="130" rx="6" fill="#060c20"/>
+  <line x1="28" y1="328" x2="484" y2="328" stroke="#0a1530" stroke-width="1"/>
+  <line x1="28" y1="355" x2="484" y2="355" stroke="#0a1530" stroke-width="1"/>
+  <line x1="28" y1="382" x2="484" y2="382" stroke="#0a1530" stroke-width="1"/>
+  <text x="32" y="325" fill="#334466" font-size="9" font-family="monospace">+1g</text>
+  <text x="32" y="358" fill="#334466" font-size="9" font-family="monospace"> 0</text>
+  <text x="32" y="388" fill="#334466" font-size="9" font-family="monospace">-1g</text>
+  <polyline points="55,355 75,336 95,318 115,306 135,320 155,341 175,362 195,374 215,361 235,339 255,317 275,306 295,321 315,344 335,365 355,371 375,350 395,327 415,312 435,326 455,347 475,361" fill="none" stroke="#4488ff" stroke-width="2.5" stroke-linecap="round"/>
+  <polyline points="55,342 75,358 95,372 115,362 135,341 155,317 175,304 195,317 215,341 235,366 255,376 275,357 295,333 315,311 335,307 355,325 375,351 395,370 415,360 435,341 455,321 475,311" fill="none" stroke="#33cc88" stroke-width="2" stroke-linecap="round"/>
+  <polyline points="55,338 75,343 95,350 115,358 135,366 155,372 175,377 195,374 215,368 235,358 255,347 275,341 295,339 315,341 335,347 355,354 375,362 395,369 415,372 435,368 455,360 475,350" fill="none" stroke="#ff8844" stroke-width="1.8"/>
+  <rect x="420" y="294" width="8" height="8" fill="#4488ff" rx="1"/><text x="431" y="302" fill="#4488ff" font-size="9" font-family="monospace">X</text>
+  <rect x="447" y="294" width="8" height="8" fill="#33cc88" rx="1"/><text x="458" y="302" fill="#33cc88" font-size="9" font-family="monospace">Y</text>
+  <rect x="473" y="294" width="8" height="8" fill="#ff8844" rx="1"/>
+  <text x="38" y="442" fill="#446688" font-size="11" font-family="monospace">Model Performance</text>
+  <rect x="28" y="450" width="142" height="90" rx="8" fill="#060c1e" stroke="#1a2a50" stroke-width="1"/>
+  <text x="99" y="492" fill="#4fc3f7" font-size="26" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">90.9%</text>
+  <text x="99" y="514" fill="#335570" font-size="11" font-family="Arial,sans-serif" text-anchor="middle">Accuracy</text>
+  <text x="99" y="530" fill="#223344" font-size="10" font-family="monospace" text-anchor="middle">F1: 0.908</text>
+  <rect x="185" y="450" width="142" height="90" rx="8" fill="#060e0a" stroke="#1a3520" stroke-width="1"/>
+  <text x="256" y="492" fill="#66ffaa" font-size="26" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">0.17ms</text>
+  <text x="256" y="514" fill="#336644" font-size="11" font-family="Arial,sans-serif" text-anchor="middle">Latency</text>
+  <text x="256" y="530" fill="#224433" font-size="10" font-family="monospace" text-anchor="middle">NPU 200Hz</text>
+  <rect x="342" y="450" width="142" height="90" rx="8" fill="#100806" stroke="#302010" stroke-width="1"/>
+  <text x="413" y="492" fill="#ff9955" font-size="26" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">846KB</text>
+  <text x="413" y="514" fill="#553322" font-size="11" font-family="Arial,sans-serif" text-anchor="middle">Model Size</text>
+  <text x="413" y="530" fill="#332211" font-size="10" font-family="monospace" text-anchor="middle">ONNX int8</text>
+  <text x="38" y="562" fill="#446688" font-size="11" font-family="monospace">Recent Events</text>
+  <rect x="28" y="570" width="456" height="310" rx="6" fill="#040810"/>
+  <text x="40" y="598" fill="#2d4060" font-size="11" font-family="monospace">09:41:00  System initialized</text>
+  <text x="40" y="618" fill="#2d4060" font-size="11" font-family="monospace">09:41:02  Model loaded: Fall1DCNN</text>
+  <text x="40" y="638" fill="#2d4060" font-size="11" font-family="monospace">09:41:02  ONNX Runtime v1.18.0</text>
+  <text x="40" y="658" fill="#2d5040" font-size="11" font-family="monospace">09:41:05  IMU stream: 200 Hz active</text>
+  <text x="40" y="678" fill="#2d5040" font-size="11" font-family="monospace">09:41:15  Inference avg: 0.17 ms</text>
+  <text x="40" y="698" fill="#2d5040" font-size="11" font-family="monospace">09:41:30  #1247 ADL Normal</text>
+  <text x="40" y="718" fill="#2d5040" font-size="11" font-family="monospace">09:41:35  #1248 ADL Normal</text>
+  <text x="40" y="738" fill="#cc2222" font-size="11" font-family="monospace">09:41:45  #1249 FALL DETECTED</text>
+  <text x="40" y="758" fill="#cc6600" font-size="11" font-family="monospace">09:41:45  Alert sent to emergency</text>
+  <text x="40" y="778" fill="#2d5040" font-size="11" font-family="monospace">09:41:50  #1250 ADL Recovery</text>
+  <rect x="40" y="786" width="8" height="14" fill="#4488ff" opacity="0.8"/>
+  <rect x="22" y="888" width="468" height="64" fill="#030810"/>
+  <line x1="22" y1="888" x2="490" y2="888" stroke="#0a1530" stroke-width="1"/>
+  <circle cx="106" cy="920" r="18" fill="#0a1530"/>
+  <circle cx="256" cy="920" r="22" fill="#cc3366"/>
+  <text x="256" y="927" fill="#fff" font-size="20" font-family="sans-serif" text-anchor="middle">&#9654;</text>
+  <circle cx="406" cy="920" r="18" fill="#0a1530"/>
+  <rect x="196" y="960" width="120" height="5" rx="2.5" fill="rgba(255,255,255,0.18)"/>
+</svg>`, 0);
 
-  // ── SoC Layer ──
-  const texSoC = makeTex(512, 1024, (ctx, w, h) => {
-    ctx.fillStyle = '#001525';
-    ctx.fillRect(0, 0, w, h);
-    // Fine cyan circuit grid
-    ctx.strokeStyle = 'rgba(0,180,255,0.12)'; ctx.lineWidth = 1;
-    for (let x = 0; x < w; x += 32) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-    for (let y = 0; y < h; y += 32) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-    // Horizontal routing traces
-    ctx.strokeStyle = 'rgba(0,160,220,0.35)'; ctx.lineWidth = 2;
-    [h*0.22, h*0.48, h*0.74].forEach(y => {
-      ctx.beginPath(); ctx.moveTo(32,y); ctx.lineTo(w-32,y); ctx.stroke();
-    });
-    // Bond pads on all 4 edges
-    ctx.fillStyle = 'rgba(0,220,255,0.55)';
-    for (let i = 0; i < 18; i++) {
-      const t = 20 + i*(h/18);
-      ctx.fillRect(3, t, 9, 5); ctx.fillRect(w-12, t, 9, 5);
-    }
-    for (let i = 0; i < 9; i++) {
-      const x = 20 + i*(w/9);
-      ctx.fillRect(x, 3, 5, 9); ctx.fillRect(x, h-12, 5, 9);
-    }
-    // Main die outline
-    ctx.strokeStyle = 'rgba(0,200,255,0.5)'; ctx.lineWidth = 2;
-    ctx.strokeRect(w*0.2, h*0.28, w*0.6, h*0.24);
-    ctx.fillStyle = 'rgba(0,100,180,0.25)';
-    ctx.fillRect(w*0.2, h*0.28, w*0.6, h*0.24);
-    // Label: SoC
-    ctx.fillStyle = 'rgba(0,220,255,0.8)';
-    ctx.font = `bold ${w/7}px monospace`; ctx.textAlign = 'center';
-    ctx.fillText('A17 Pro', w/2, h*0.43);
-    // Sub-dies
-    [[w*0.15,h*0.55,w*0.32,h*0.1,'GPU'],[w*0.53,h*0.55,w*0.32,h*0.1,'NPU']].forEach(([dx,dy,dw,dh,label]) => {
-      ctx.fillStyle='rgba(0,80,140,0.3)'; ctx.fillRect(dx,dy,dw,dh);
-      ctx.strokeStyle='rgba(0,140,200,0.4)'; ctx.lineWidth=1.5; ctx.strokeRect(dx,dy,dw,dh);
-      ctx.fillStyle='rgba(0,180,220,0.7)'; ctx.font=`${w/13}px monospace`;
-      ctx.fillText(label, dx+dw/2, dy+dh*0.68);
-    });
-    // LPDDR pads (right side strip)
-    ctx.fillStyle = 'rgba(0,150,200,0.3)';
-    ctx.fillRect(w*0.72, h*0.68, w*0.2, h*0.18);
-    ctx.strokeStyle='rgba(0,180,230,0.4)'; ctx.lineWidth=1; ctx.strokeRect(w*0.72, h*0.68, w*0.2, h*0.18);
-    ctx.fillStyle='rgba(0,200,230,0.6)'; ctx.font=`${w/15}px monospace`;
-    ctx.fillText('LPDDR5', w*0.82, h*0.79);
-  });
+  /* ── 1: SoC — A17 Pro chip die illustration ── */
+  loadSvg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 1024">
+  <rect width="512" height="1024" fill="#0a0815"/>
+  <polygon points="65,8 447,8 504,65 504,959 447,1016 65,1016 8,959 8,65" fill="#1a1530" stroke="#3d2a60" stroke-width="2"/>
+  <g fill="#b8922a">
+    <rect x="70" y="10" width="22" height="18" rx="2"/><rect x="102" y="10" width="22" height="18" rx="2"/>
+    <rect x="134" y="10" width="22" height="18" rx="2"/><rect x="166" y="10" width="22" height="18" rx="2"/>
+    <rect x="198" y="10" width="22" height="18" rx="2"/><rect x="230" y="10" width="22" height="18" rx="2"/>
+    <rect x="262" y="10" width="22" height="18" rx="2"/><rect x="294" y="10" width="22" height="18" rx="2"/>
+    <rect x="326" y="10" width="22" height="18" rx="2"/><rect x="358" y="10" width="22" height="18" rx="2"/>
+    <rect x="390" y="10" width="22" height="18" rx="2"/><rect x="422" y="10" width="22" height="18" rx="2"/>
+    <rect x="70" y="996" width="22" height="18" rx="2"/><rect x="102" y="996" width="22" height="18" rx="2"/>
+    <rect x="134" y="996" width="22" height="18" rx="2"/><rect x="166" y="996" width="22" height="18" rx="2"/>
+    <rect x="198" y="996" width="22" height="18" rx="2"/><rect x="230" y="996" width="22" height="18" rx="2"/>
+    <rect x="262" y="996" width="22" height="18" rx="2"/><rect x="294" y="996" width="22" height="18" rx="2"/>
+    <rect x="326" y="996" width="22" height="18" rx="2"/><rect x="358" y="996" width="22" height="18" rx="2"/>
+    <rect x="390" y="996" width="22" height="18" rx="2"/><rect x="422" y="996" width="22" height="18" rx="2"/>
+    <rect x="8" y="100" width="18" height="20" rx="2"/><rect x="8" y="180" width="18" height="20" rx="2"/>
+    <rect x="8" y="260" width="18" height="20" rx="2"/><rect x="8" y="340" width="18" height="20" rx="2"/>
+    <rect x="8" y="420" width="18" height="20" rx="2"/><rect x="8" y="500" width="18" height="20" rx="2"/>
+    <rect x="8" y="580" width="18" height="20" rx="2"/><rect x="8" y="660" width="18" height="20" rx="2"/>
+    <rect x="8" y="740" width="18" height="20" rx="2"/><rect x="8" y="820" width="18" height="20" rx="2"/>
+    <rect x="486" y="100" width="18" height="20" rx="2"/><rect x="486" y="180" width="18" height="20" rx="2"/>
+    <rect x="486" y="260" width="18" height="20" rx="2"/><rect x="486" y="340" width="18" height="20" rx="2"/>
+    <rect x="486" y="420" width="18" height="20" rx="2"/><rect x="486" y="500" width="18" height="20" rx="2"/>
+    <rect x="486" y="580" width="18" height="20" rx="2"/><rect x="486" y="660" width="18" height="20" rx="2"/>
+    <rect x="486" y="740" width="18" height="20" rx="2"/><rect x="486" y="820" width="18" height="20" rx="2"/>
+  </g>
+  <rect x="40" y="68" width="432" height="888" rx="4" fill="#12102a"/>
+  <g stroke="#1a1535" stroke-width="0.5" opacity="0.6">
+    <line x1="40" y1="128" x2="472" y2="128"/><line x1="40" y1="188" x2="472" y2="188"/>
+    <line x1="40" y1="248" x2="472" y2="248"/><line x1="40" y1="308" x2="472" y2="308"/>
+    <line x1="40" y1="368" x2="472" y2="368"/><line x1="40" y1="428" x2="472" y2="428"/>
+    <line x1="40" y1="488" x2="472" y2="488"/><line x1="40" y1="548" x2="472" y2="548"/>
+    <line x1="40" y1="608" x2="472" y2="608"/><line x1="40" y1="668" x2="472" y2="668"/>
+    <line x1="40" y1="728" x2="472" y2="728"/><line x1="40" y1="788" x2="472" y2="788"/>
+    <line x1="100" y1="68" x2="100" y2="956"/><line x1="160" y1="68" x2="160" y2="956"/>
+    <line x1="220" y1="68" x2="220" y2="956"/><line x1="280" y1="68" x2="280" y2="956"/>
+    <line x1="340" y1="68" x2="340" y2="956"/><line x1="400" y1="68" x2="400" y2="956"/>
+  </g>
+  <rect x="48" y="76" width="200" height="300" rx="4" fill="#0e1e4a" stroke="#3050b0" stroke-width="1.5"/>
+  <g fill="#1a2e78" stroke="#2a4aaa" stroke-width="1">
+    <rect x="58" y="86" width="82" height="72" rx="3"/><rect x="154" y="86" width="82" height="72" rx="3"/>
+    <rect x="58" y="168" width="82" height="72" rx="3"/><rect x="154" y="168" width="82" height="72" rx="3"/>
+  </g>
+  <g fill="#6080e8" font-size="12" font-family="monospace" text-anchor="middle">
+    <text x="99" y="127">P-Core</text><text x="195" y="127">P-Core</text>
+    <text x="99" y="209">P-Core</text><text x="195" y="209">P-Core</text>
+  </g>
+  <g fill="#0f1e60" stroke="#203080" stroke-width="1">
+    <rect x="58" y="252" width="82" height="60" rx="3"/><rect x="154" y="252" width="82" height="60" rx="3"/>
+  </g>
+  <g fill="#3060c0" font-size="11" font-family="monospace" text-anchor="middle">
+    <text x="99" y="286">E-Core</text><text x="195" y="286">E-Core</text>
+  </g>
+  <text x="148" y="358" fill="#7090e0" font-size="15" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">6-Core CPU</text>
+  <text x="148" y="374" fill="#404880" font-size="10" font-family="monospace" text-anchor="middle">4P + 2E</text>
+  <rect x="264" y="76" width="200" height="300" rx="4" fill="#0a2828" stroke="#208080" stroke-width="1.5"/>
+  <g fill="#0a3838" stroke="#106060" stroke-width="1">
+    <rect x="274" y="86" width="50" height="50" rx="2"/><rect x="332" y="86" width="50" height="50" rx="2"/><rect x="390" y="86" width="50" height="50" rx="2"/>
+    <rect x="274" y="144" width="50" height="50" rx="2"/><rect x="332" y="144" width="50" height="50" rx="2"/><rect x="390" y="144" width="50" height="50" rx="2"/>
+    <rect x="274" y="202" width="50" height="50" rx="2"/><rect x="332" y="202" width="50" height="50" rx="2"/><rect x="390" y="202" width="50" height="50" rx="2"/>
+    <rect x="274" y="260" width="50" height="50" rx="2"/><rect x="332" y="260" width="50" height="50" rx="2"/>
+  </g>
+  <text x="364" y="344" fill="#40c0c0" font-size="15" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">5-Core GPU</text>
+  <text x="364" y="360" fill="#205050" font-size="10" font-family="monospace" text-anchor="middle">Mesh Shading</text>
+  <rect x="48" y="392" width="416" height="155" rx="4" fill="#160d38" stroke="#6030b0" stroke-width="1.5"/>
+  <g fill="#220a50" stroke="#4020a0" stroke-width="0.8">
+    <rect x="58" y="402" width="40" height="34" rx="2"/><rect x="106" y="402" width="40" height="34" rx="2"/>
+    <rect x="154" y="402" width="40" height="34" rx="2"/><rect x="202" y="402" width="40" height="34" rx="2"/>
+    <rect x="250" y="402" width="40" height="34" rx="2"/><rect x="298" y="402" width="40" height="34" rx="2"/>
+    <rect x="346" y="402" width="40" height="34" rx="2"/><rect x="394" y="402" width="40" height="34" rx="2"/>
+    <rect x="58" y="444" width="40" height="34" rx="2"/><rect x="106" y="444" width="40" height="34" rx="2"/>
+    <rect x="154" y="444" width="40" height="34" rx="2"/><rect x="202" y="444" width="40" height="34" rx="2"/>
+    <rect x="250" y="444" width="40" height="34" rx="2"/><rect x="298" y="444" width="40" height="34" rx="2"/>
+    <rect x="346" y="444" width="40" height="34" rx="2"/><rect x="394" y="444" width="40" height="34" rx="2"/>
+  </g>
+  <text x="256" y="502" fill="#b060ff" font-size="17" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">16-Core Neural Engine</text>
+  <text x="256" y="522" fill="#602080" font-size="11" font-family="monospace" text-anchor="middle">35 TOPS  ·  FallGuard: 0.17ms / window</text>
+  <rect x="48" y="562" width="200" height="130" rx="4" fill="#0a1e08" stroke="#30a020" stroke-width="1.5"/>
+  <g fill="#0e2c0a" stroke="#258020" stroke-width="0.8">
+    <rect x="58" y="572" width="82" height="18" rx="1"/><rect x="58" y="596" width="82" height="18" rx="1"/>
+    <rect x="58" y="620" width="82" height="18" rx="1"/><rect x="58" y="644" width="82" height="18" rx="1"/>
+  </g>
+  <text x="148" y="616" fill="#50d030" font-size="15" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">LPDDR5X</text>
+  <text x="148" y="638" fill="#306020" font-size="11" font-family="monospace" text-anchor="middle">8 GB / 128-bit</text>
+  <text x="148" y="680" fill="#204018" font-size="10" font-family="monospace" text-anchor="middle">77 GB/s bandwidth</text>
+  <rect x="264" y="562" width="200" height="130" rx="4" fill="#180810" stroke="#c03060" stroke-width="1.5"/>
+  <text x="364" y="614" fill="#ff6090" font-size="14" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">ISP + Secure</text>
+  <text x="364" y="636" fill="#ff6090" font-size="14" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">Enclave</text>
+  <text x="364" y="658" fill="#602040" font-size="10" font-family="monospace" text-anchor="middle">AES-256 / Biometrics</text>
+  <text x="364" y="680" fill="#402030" font-size="10" font-family="monospace" text-anchor="middle">48MP RAW pipeline</text>
+  <rect x="48" y="708" width="416" height="70" rx="4" fill="#101010" stroke="#333" stroke-width="1"/>
+  <text x="256" y="740" fill="#555" font-size="13" font-family="monospace" text-anchor="middle">NVMe Storage Controller</text>
+  <text x="256" y="758" fill="#3a3a3a" font-size="10" font-family="monospace" text-anchor="middle">Unified Memory Architecture</text>
+  <text x="256" y="842" fill="#c8c0e8" font-size="42" font-family="Arial,sans-serif" font-weight="900" text-anchor="middle">A17 Pro</text>
+  <text x="256" y="872" fill="#8070b0" font-size="18" font-family="Arial,sans-serif" text-anchor="middle">Apple Silicon</text>
+  <text x="256" y="900" fill="#4a406a" font-size="12" font-family="monospace" text-anchor="middle">TSMC 3nm  ·  19B transistors</text>
+  <text x="256" y="920" fill="#302840" font-size="10" font-family="monospace" text-anchor="middle">APL1W85  ·  Made in Taiwan</text>
+</svg>`, 1);
 
-  // ── IMU Sensor Layer ──
-  const texIMU = makeTex(512, 1024, (ctx, w, h) => {
-    ctx.fillStyle = '#110d00';
-    ctx.fillRect(0, 0, w, h);
-    // Gold grid
-    ctx.strokeStyle = 'rgba(200,150,0,0.1)'; ctx.lineWidth = 1;
-    for (let x = 0; x < w; x += 28) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-    for (let y = 0; y < h; y += 28) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-    // Routing traces (3 main routes)
-    ctx.strokeStyle = 'rgba(200,140,0,0.45)'; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(0, h*0.35); ctx.lineTo(w*0.28, h*0.35); ctx.lineTo(w*0.28, h*0.42); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(w, h*0.35); ctx.lineTo(w*0.72, h*0.35); ctx.lineTo(w*0.72, h*0.42); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(w*0.5, 0); ctx.lineTo(w*0.5, h*0.35); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(w*0.5, h*0.72); ctx.lineTo(w*0.5, h); ctx.stroke();
-    // MEMS chip main package
-    const mx=w*0.22, my=h*0.38, mw=w*0.56, mh=h*0.22;
-    ctx.fillStyle='rgba(180,120,0,0.3)'; ctx.fillRect(mx,my,mw,mh);
-    ctx.strokeStyle='#cc9900'; ctx.lineWidth=2.5; ctx.strokeRect(mx,my,mw,mh);
-    ctx.fillStyle='#ffcc00'; ctx.font=`bold ${w/8}px monospace`; ctx.textAlign='center';
-    ctx.fillText('IMU', w/2, my+mh*0.48);
-    ctx.fillStyle='rgba(255,200,0,0.65)'; ctx.font=`${w/14}px monospace`;
-    ctx.fillText('6-axis MEMS', w/2, my+mh*0.8);
-    // Axis arrows
-    [['±X','#ff6644'],['±Y','#44cc44'],['±Z','#4488ff']].forEach(([label,color],i)=>{
-      const cx=[w*0.18,w*0.5,w*0.82][i];
-      ctx.fillStyle=color; ctx.font=`bold ${w/12}px monospace`; ctx.textAlign='center';
-      ctx.fillText(label, cx, h*0.78);
-    });
-    // Solder pads (bond wires)
-    ctx.fillStyle='rgba(255,180,0,0.6)';
-    for(let i=0;i<8;i++){
-      ctx.fillRect(mx+i*(mw/8)+2, my-10, mw/8-4, 8);
-      ctx.fillRect(mx+i*(mw/8)+2, my+mh+2, mw/8-4, 8);
-    }
-  });
+  /* ── 2: IMU — MEMS sensor microscopic view ── */
+  loadSvg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 1024">
+  <rect width="512" height="1024" fill="#0a0900"/>
+  <text x="256" y="34" fill="#4a4200" font-size="13" font-family="monospace" text-anchor="middle">MEMS SENSOR  ·  8x Magnified View</text>
+  <rect x="56" y="50" width="400" height="920" rx="8" fill="#1e1a00" stroke="#665500" stroke-width="3"/>
+  <text x="256" y="80" fill="#886600" font-size="16" font-family="monospace" text-anchor="middle">ST LSM6DSO  ·  6-Axis IMU</text>
+  <rect x="80" y="95" width="352" height="540" rx="6" fill="#141200" stroke="#998800" stroke-width="2"/>
+  <text x="256" y="116" fill="#aa8800" font-size="12" font-family="monospace" text-anchor="middle">SILICON MEMS DIE  ·  3-DoF ACC + 3-DoF GYRO</text>
+  <rect x="90" y="125" width="330" height="240" rx="4" fill="#1a1500" stroke="#665500" stroke-width="1.5"/>
+  <text x="255" y="144" fill="#aa8800" font-size="13" font-family="monospace" text-anchor="middle">ACCELEROMETER</text>
+  <rect x="110" y="154" width="290" height="190" rx="2" fill="#0d0c00" stroke="#886600" stroke-width="1.5"/>
+  <g stroke="#cc9900" stroke-width="2" fill="none">
+    <line x1="168" y1="154" x2="168" y2="175"/><line x1="212" y1="154" x2="212" y2="175"/>
+    <line x1="256" y1="154" x2="256" y2="175"/><line x1="300" y1="154" x2="300" y2="175"/><line x1="344" y1="154" x2="344" y2="175"/>
+    <line x1="168" y1="324" x2="168" y2="344"/><line x1="212" y1="324" x2="212" y2="344"/>
+    <line x1="256" y1="324" x2="256" y2="344"/><line x1="300" y1="324" x2="300" y2="344"/><line x1="344" y1="324" x2="344" y2="344"/>
+  </g>
+  <rect x="120" y="175" width="272" height="148" rx="2" fill="#1f1a00" stroke="#ddaa00" stroke-width="2"/>
+  <g fill="#cc8800">
+    <rect x="380" y="188" width="12" height="6" rx="1"/><rect x="380" y="202" width="12" height="6" rx="1"/>
+    <rect x="380" y="216" width="12" height="6" rx="1"/><rect x="380" y="230" width="12" height="6" rx="1"/>
+    <rect x="380" y="244" width="12" height="6" rx="1"/><rect x="380" y="258" width="12" height="6" rx="1"/>
+    <rect x="380" y="272" width="12" height="6" rx="1"/><rect x="380" y="286" width="12" height="6" rx="1"/>
+    <rect x="110" y="188" width="12" height="6" rx="1"/><rect x="110" y="202" width="12" height="6" rx="1"/>
+    <rect x="110" y="216" width="12" height="6" rx="1"/><rect x="110" y="230" width="12" height="6" rx="1"/>
+    <rect x="110" y="244" width="12" height="6" rx="1"/><rect x="110" y="258" width="12" height="6" rx="1"/>
+    <rect x="110" y="272" width="12" height="6" rx="1"/><rect x="110" y="286" width="12" height="6" rx="1"/>
+  </g>
+  <g stroke="#332a00" stroke-width="1" fill="none">
+    <line x1="140" y1="195" x2="372" y2="195"/><line x1="140" y1="215" x2="372" y2="215"/>
+    <line x1="140" y1="235" x2="372" y2="235"/><line x1="140" y1="255" x2="372" y2="255"/>
+    <line x1="140" y1="275" x2="372" y2="275"/><line x1="140" y1="295" x2="372" y2="295"/>
+    <line x1="140" y1="315" x2="372" y2="315"/>
+  </g>
+  <circle cx="256" cy="249" r="10" fill="#ffaa00" opacity="0.6"/><circle cx="256" cy="249" r="4" fill="#ffcc00"/>
+  <rect x="90" y="380" width="330" height="240" rx="4" fill="#001515" stroke="#006655" stroke-width="1.5"/>
+  <text x="255" y="400" fill="#00aa88" font-size="13" font-family="monospace" text-anchor="middle">GYROSCOPE</text>
+  <rect x="130" y="415" width="70" height="180" rx="3" fill="#004a38" stroke="#009960" stroke-width="1"/>
+  <rect x="312" y="415" width="70" height="180" rx="3" fill="#004a38" stroke="#009960" stroke-width="1"/>
+  <rect x="130" y="500" width="252" height="10" rx="2" fill="#00aa55" stroke="#00cc66" stroke-width="1"/>
+  <rect x="142" y="425" width="46" height="80" rx="2" fill="#002820" stroke="#00aa66" stroke-width="1.5"/>
+  <rect x="324" y="425" width="46" height="80" rx="2" fill="#002820" stroke="#00aa66" stroke-width="1.5"/>
+  <g fill="#006644">
+    <rect x="98" y="445" width="10" height="5" rx="1"/><rect x="98" y="458" width="10" height="5" rx="1"/>
+    <rect x="98" y="471" width="10" height="5" rx="1"/><rect x="98" y="484" width="10" height="5" rx="1"/>
+    <rect x="404" y="445" width="10" height="5" rx="1"/><rect x="404" y="458" width="10" height="5" rx="1"/>
+    <rect x="404" y="471" width="10" height="5" rx="1"/><rect x="404" y="484" width="10" height="5" rx="1"/>
+  </g>
+  <text x="255" y="578" fill="#006644" font-size="11" font-family="monospace" text-anchor="middle">Coriolis-effect sensing</text>
+  <text x="255" y="600" fill="#004433" font-size="12" font-family="monospace" text-anchor="middle">&#177;2000 dps</text>
+  <rect x="80" y="650" width="352" height="200" rx="6" fill="#0d0c00" stroke="#554400" stroke-width="1.5"/>
+  <text x="256" y="676" fill="#cc9900" font-size="14" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">Specifications</text>
+  <g fill="#886600" font-size="11" font-family="monospace">
+    <text x="100" y="700">Accelerometer:</text><text x="100" y="720">Gyroscope:</text>
+    <text x="100" y="740">Output Rate:</text><text x="100" y="760">Interface:</text>
+    <text x="100" y="780">Package:</text><text x="100" y="800">Size:</text>
+    <text x="100" y="820">Power:</text>
+  </g>
+  <g fill="#ccaa00" font-size="11" font-family="monospace" text-anchor="end">
+    <text x="415" y="700">&#177;16 g</text><text x="415" y="720">&#177;2000 dps</text>
+    <text x="415" y="740">200 Hz (SisFall)</text><text x="415" y="760">I2C / SPI</text>
+    <text x="415" y="780">LGA-14  2.5mm</text><text x="415" y="800">2.5 x 3.0 mm</text>
+    <text x="415" y="820">0.55 mA</text>
+  </g>
+  <text x="256" y="876" fill="#665500" font-size="12" font-family="monospace" text-anchor="middle">LGA-14 Solder Pads</text>
+  <g fill="#b8922a">
+    <rect x="108" y="886" width="32" height="20" rx="2"/><rect x="152" y="886" width="32" height="20" rx="2"/>
+    <rect x="196" y="886" width="32" height="20" rx="2"/><rect x="240" y="886" width="32" height="20" rx="2"/>
+    <rect x="284" y="886" width="32" height="20" rx="2"/><rect x="328" y="886" width="32" height="20" rx="2"/>
+    <rect x="372" y="886" width="32" height="20" rx="2"/>
+  </g>
+  <g fill="#886600">
+    <rect x="108" y="912" width="32" height="20" rx="2"/><rect x="152" y="912" width="32" height="20" rx="2"/>
+    <rect x="196" y="912" width="32" height="20" rx="2"/><rect x="240" y="912" width="32" height="20" rx="2"/>
+    <rect x="284" y="912" width="32" height="20" rx="2"/><rect x="328" y="912" width="32" height="20" rx="2"/>
+  </g>
+</svg>`, 2);
 
-  // ── Battery Layer ──
-  const texBattery = makeTex(512, 1024, (ctx, w, h) => {
-    ctx.fillStyle = '#001208';
-    ctx.fillRect(0, 0, w, h);
-    // Cell dividers
-    ctx.strokeStyle = 'rgba(0,180,80,0.35)'; ctx.lineWidth = 2.5;
-    [h*0.28, h*0.56, h*0.78].forEach(y => {
-      ctx.beginPath(); ctx.moveTo(30,y); ctx.lineTo(w-30,y); ctx.stroke();
-      // Dashed center detail
-      ctx.setLineDash([8,6]); ctx.strokeStyle='rgba(0,140,60,0.2)';
-      ctx.beginPath(); ctx.moveTo(60,y+20); ctx.lineTo(w-60,y+20); ctx.stroke();
-      ctx.setLineDash([]); ctx.strokeStyle='rgba(0,180,80,0.35)';
-    });
-    // Capacity text
-    ctx.fillStyle='rgba(0,210,100,0.55)';
-    ctx.font=`bold ${w/7}px sans-serif`; ctx.textAlign='center';
-    ctx.fillText('4422', w/2, h*0.48);
-    ctx.font=`${w/12}px sans-serif`;
-    ctx.fillText('mAh', w/2, h*0.56);
-    // Terminal pads (bottom)
-    ctx.fillStyle='rgba(220,200,0,0.65)';
-    [[w*0.3,h*0.88],[w*0.5,h*0.88],[w*0.7,h*0.88]].forEach(([px,py])=>{
-      ctx.fillRect(px-18, py, 36, 22);
-      ctx.strokeStyle='rgba(200,180,0,0.8)'; ctx.lineWidth=1.5; ctx.strokeRect(px-18,py,36,22);
-    });
-    // Border glow effect
-    const grd = ctx.createLinearGradient(0,0,0,h);
-    grd.addColorStop(0,'rgba(0,180,80,0.15)');
-    grd.addColorStop(0.5,'rgba(0,100,50,0)');
-    grd.addColorStop(1,'rgba(0,180,80,0.15)');
-    ctx.strokeStyle=grd; ctx.lineWidth=4;
-    ctx.strokeRect(10,10,w-20,h-20);
-  });
+  /* ── 3: Battery — Li-ion NMC pouch cell ── */
+  loadSvg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 1024">
+  <defs>
+    <linearGradient id="foil" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3a3a3a"/><stop offset="25%" stop-color="#888"/><stop offset="50%" stop-color="#ccc"/><stop offset="75%" stop-color="#aaa"/><stop offset="100%" stop-color="#5a5a5a"/>
+    </linearGradient>
+    <linearGradient id="foilV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#aaa" stop-opacity="0.8"/><stop offset="100%" stop-color="#4a4a4a" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="cellbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#003810"/><stop offset="100%" stop-color="#001a08"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="1024" fill="#000e04"/>
+  <rect x="30" y="30" width="452" height="964" rx="10" fill="url(#foil)" stroke="#888" stroke-width="2"/>
+  <rect x="30" y="30" width="452" height="964" rx="10" fill="url(#foilV)" opacity="0.5"/>
+  <rect x="50" y="130" width="412" height="800" rx="4" fill="url(#cellbg)"/>
+  <g stroke="#00551a" stroke-width="1" opacity="0.7">
+    <line x1="50" y1="163" x2="462" y2="163"/><line x1="50" y1="195" x2="462" y2="195"/>
+    <line x1="50" y1="227" x2="462" y2="227"/><line x1="50" y1="259" x2="462" y2="259"/>
+    <line x1="50" y1="291" x2="462" y2="291"/><line x1="50" y1="323" x2="462" y2="323"/>
+    <line x1="50" y1="355" x2="462" y2="355"/><line x1="50" y1="387" x2="462" y2="387"/>
+    <line x1="50" y1="419" x2="462" y2="419"/><line x1="50" y1="451" x2="462" y2="451"/>
+    <line x1="50" y1="483" x2="462" y2="483"/><line x1="50" y1="515" x2="462" y2="515"/>
+    <line x1="50" y1="547" x2="462" y2="547"/><line x1="50" y1="579" x2="462" y2="579"/>
+    <line x1="50" y1="611" x2="462" y2="611"/><line x1="50" y1="643" x2="462" y2="643"/>
+    <line x1="50" y1="675" x2="462" y2="675"/><line x1="50" y1="707" x2="462" y2="707"/>
+    <line x1="50" y1="739" x2="462" y2="739"/><line x1="50" y1="771" x2="462" y2="771"/>
+    <line x1="50" y1="803" x2="462" y2="803"/><line x1="50" y1="835" x2="462" y2="835"/>
+    <line x1="50" y1="867" x2="462" y2="867"/><line x1="50" y1="899" x2="462" y2="899"/>
+  </g>
+  <g opacity="0.1">
+    <rect x="50" y="130" width="412" height="16" fill="#3366ff"/>
+    <rect x="50" y="162" width="412" height="16" fill="#ff6600"/>
+    <rect x="50" y="194" width="412" height="16" fill="#3366ff"/>
+    <rect x="50" y="226" width="412" height="16" fill="#ff6600"/>
+    <rect x="50" y="258" width="412" height="16" fill="#3366ff"/>
+    <rect x="50" y="290" width="412" height="16" fill="#ff6600"/>
+    <rect x="50" y="322" width="412" height="16" fill="#3366ff"/>
+    <rect x="50" y="354" width="412" height="16" fill="#ff6600"/>
+    <rect x="50" y="386" width="412" height="16" fill="#3366ff"/>
+    <rect x="50" y="418" width="412" height="16" fill="#ff6600"/>
+    <rect x="50" y="450" width="412" height="16" fill="#3366ff"/>
+    <rect x="50" y="482" width="412" height="16" fill="#ff6600"/>
+  </g>
+  <rect x="65" y="48" width="92" height="74" rx="4" fill="#cc4400" stroke="#ff6600" stroke-width="2"/>
+  <text x="111" y="83" fill="#ffaa44" font-size="18" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">+</text>
+  <text x="111" y="104" fill="#994400" font-size="11" font-family="monospace" text-anchor="middle">V+</text>
+  <rect x="355" y="48" width="92" height="74" rx="4" fill="#1a1a44" stroke="#4466cc" stroke-width="2"/>
+  <text x="401" y="83" fill="#7799ff" font-size="18" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">&#8722;</text>
+  <text x="401" y="104" fill="#334488" font-size="11" font-family="monospace" text-anchor="middle">GND</text>
+  <rect x="209" y="52" width="94" height="68" rx="4" fill="#1a1008" stroke="#553311" stroke-width="1.5"/>
+  <text x="256" y="80" fill="#8a6a33" font-size="12" font-family="monospace" text-anchor="middle">NTC</text>
+  <text x="256" y="98" fill="#664422" font-size="11" font-family="monospace" text-anchor="middle">10 k&#937;</text>
+  <text x="256" y="578" fill="#00dd55" font-size="80" font-family="Arial,sans-serif" font-weight="900" text-anchor="middle" opacity="0.85">4422</text>
+  <text x="256" y="648" fill="#00aa44" font-size="32" font-family="Arial,sans-serif" font-weight="400" text-anchor="middle">mAh</text>
+  <text x="256" y="698" fill="#008833" font-size="17" font-family="monospace" text-anchor="middle">3.82 V  ·  Li-ion NMC</text>
+  <text x="256" y="722" fill="#005522" font-size="13" font-family="monospace" text-anchor="middle">Max 4.35V  ·  2C charge rate</text>
+  <text x="256" y="764" fill="#004418" font-size="12" font-family="monospace" text-anchor="middle">Cycle life: 500+  ·  &#8722;20 to 60&#176;C</text>
+  <text x="170" y="962" fill="#556644" font-size="20" font-family="sans-serif" text-anchor="middle">&#9888;</text>
+  <text x="256" y="962" fill="#446633" font-size="11" font-family="monospace" text-anchor="middle">Li-ion Battery  ·  Handle with care</text>
+  <text x="256" y="980" fill="#335522" font-size="10" font-family="monospace" text-anchor="middle">Do not short-circuit or puncture</text>
+  <text x="344" y="962" fill="#556644" font-size="14" font-family="monospace" text-anchor="middle">&#9851;</text>
+  <rect x="450" y="130" width="12" height="800" rx="3" fill="#222" stroke="#333" stroke-width="1"/>
+  <text x="456" y="540" fill="#444" font-size="9" font-family="monospace" text-anchor="middle" transform="rotate(90,456,540)">SAFETY VENT</text>
+</svg>`, 3);
 
-  // ── PCB / Motherboard Layer ──
-  const texPCB = makeTex(512, 1024, (ctx, w, h) => {
-    ctx.fillStyle = '#001210';
-    ctx.fillRect(0, 0, w, h);
-    // Green traces - horizontal bus lines
-    ctx.strokeStyle = 'rgba(0,200,100,0.3)'; ctx.lineWidth = 2;
-    for(let y=40; y<h; y+=55){
-      ctx.beginPath(); ctx.moveTo(20,y);
-      for(let x=20;x<w;x+=70){
-        ctx.lineTo(x+35,y); ctx.lineTo(x+45,y+18); ctx.lineTo(x+55,y+18); ctx.lineTo(x+65,y);
-      }
-      ctx.stroke();
-    }
-    // Via holes
-    ctx.fillStyle='rgba(0,220,120,0.45)';
-    for(let x=35;x<w;x+=55) for(let y=65;y<h;y+=88){
-      ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle='rgba(0,180,80,0.6)'; ctx.lineWidth=1; ctx.stroke();
-    }
-    // Mosfet / component pads
-    ctx.fillStyle='rgba(0,180,90,0.25)';
-    [[w*0.15,h*0.2],[w*0.6,h*0.35],[w*0.25,h*0.62],[w*0.7,h*0.72]].forEach(([cx,cy])=>{
-      ctx.fillRect(cx-18,cy-12,36,24);
-      ctx.strokeStyle='rgba(0,200,100,0.5)'; ctx.lineWidth=1.5; ctx.strokeRect(cx-18,cy-12,36,24);
-    });
-    // Connector row (top)
-    ctx.fillStyle='rgba(180,170,0,0.5)';
-    for(let i=0;i<12;i++) ctx.fillRect(30+i*36, 18, 22, 32);
-    ctx.strokeStyle='rgba(200,190,0,0.6)'; ctx.lineWidth=1;
-    for(let i=0;i<12;i++) ctx.strokeRect(30+i*36, 18, 22, 32);
-    // Board outline highlight
-    ctx.strokeStyle='rgba(0,200,100,0.2)'; ctx.lineWidth=6;
-    ctx.strokeRect(8,8,w-16,h-16);
-  });
+  /* ── 4: PCB — Smartphone motherboard ── */
+  loadSvg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 1024">
+  <defs>
+    <linearGradient id="pcbbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#062010"/><stop offset="100%" stop-color="#030e08"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="1024" fill="#000806"/>
+  <rect x="18" y="18" width="476" height="988" rx="6" fill="url(#pcbbg)" stroke="#0a3018" stroke-width="2"/>
+  <rect x="22" y="22" width="468" height="980" rx="5" fill="none" stroke="#104018" stroke-width="1" stroke-dasharray="6,4"/>
+  <rect x="28" y="30" width="8" height="964" fill="#b8922a" opacity="0.6"/>
+  <rect x="476" y="30" width="8" height="964" fill="#5a7818" opacity="0.5"/>
+  <g stroke="#cc9900" stroke-width="2.5" fill="none" opacity="0.7">
+    <line x1="36" y1="120" x2="476" y2="120"/><line x1="36" y1="300" x2="476" y2="300"/>
+    <line x1="36" y1="480" x2="476" y2="480"/><line x1="36" y1="660" x2="476" y2="660"/>
+    <line x1="36" y1="840" x2="476" y2="840"/>
+  </g>
+  <g stroke="#886600" stroke-width="1" fill="none" opacity="0.5">
+    <line x1="80" y1="30" x2="80" y2="994"/><line x1="160" y1="30" x2="160" y2="994"/>
+    <line x1="240" y1="30" x2="240" y2="994"/><line x1="320" y1="30" x2="320" y2="994"/>
+    <line x1="400" y1="30" x2="400" y2="994"/>
+  </g>
+  <g fill="#cc9900" stroke="#886600" stroke-width="1">
+    <circle cx="80" cy="120" r="5"/><circle cx="160" cy="120" r="5"/>
+    <circle cx="240" cy="120" r="5"/><circle cx="320" cy="120" r="5"/><circle cx="400" cy="120" r="5"/>
+    <circle cx="80" cy="300" r="5"/><circle cx="160" cy="300" r="5"/>
+    <circle cx="240" cy="300" r="5"/><circle cx="320" cy="300" r="5"/><circle cx="400" cy="300" r="5"/>
+    <circle cx="80" cy="480" r="5"/><circle cx="160" cy="480" r="5"/>
+    <circle cx="240" cy="480" r="5"/><circle cx="320" cy="480" r="5"/><circle cx="400" cy="480" r="5"/>
+    <circle cx="80" cy="660" r="5"/><circle cx="160" cy="660" r="5"/>
+    <circle cx="240" cy="660" r="5"/><circle cx="320" cy="660" r="5"/><circle cx="400" cy="660" r="5"/>
+  </g>
+  <rect x="140" y="138" width="232" height="284" rx="4" fill="#0a0a0a" stroke="#339933" stroke-width="2"/>
+  <rect x="142" y="140" width="228" height="280" rx="3" fill="none" stroke="#1a3a1a" stroke-width="1"/>
+  <g fill="#b8922a">
+    <rect x="150" y="130" width="8" height="8" rx="1"/><rect x="166" y="130" width="8" height="8" rx="1"/>
+    <rect x="182" y="130" width="8" height="8" rx="1"/><rect x="198" y="130" width="8" height="8" rx="1"/>
+    <rect x="214" y="130" width="8" height="8" rx="1"/><rect x="230" y="130" width="8" height="8" rx="1"/>
+    <rect x="246" y="130" width="8" height="8" rx="1"/><rect x="262" y="130" width="8" height="8" rx="1"/>
+    <rect x="278" y="130" width="8" height="8" rx="1"/><rect x="294" y="130" width="8" height="8" rx="1"/>
+    <rect x="310" y="130" width="8" height="8" rx="1"/><rect x="326" y="130" width="8" height="8" rx="1"/>
+    <rect x="342" y="130" width="8" height="8" rx="1"/><rect x="358" y="130" width="8" height="8" rx="1"/>
+    <rect x="150" y="422" width="8" height="8" rx="1"/><rect x="166" y="422" width="8" height="8" rx="1"/>
+    <rect x="182" y="422" width="8" height="8" rx="1"/><rect x="198" y="422" width="8" height="8" rx="1"/>
+    <rect x="214" y="422" width="8" height="8" rx="1"/><rect x="230" y="422" width="8" height="8" rx="1"/>
+    <rect x="246" y="422" width="8" height="8" rx="1"/><rect x="262" y="422" width="8" height="8" rx="1"/>
+    <rect x="278" y="422" width="8" height="8" rx="1"/><rect x="294" y="422" width="8" height="8" rx="1"/>
+    <rect x="310" y="422" width="8" height="8" rx="1"/><rect x="326" y="422" width="8" height="8" rx="1"/>
+  </g>
+  <text x="256" y="266" fill="#339933" font-size="18" font-family="monospace" text-anchor="middle" font-weight="bold">SoC</text>
+  <text x="256" y="290" fill="#226622" font-size="13" font-family="monospace" text-anchor="middle">A17 Pro</text>
+  <text x="256" y="310" fill="#1a4a1a" font-size="10" font-family="monospace" text-anchor="middle">QFN-1456 BGA</text>
+  <rect x="40" y="148" width="82" height="82" rx="3" fill="#0a0a0a" stroke="#666633" stroke-width="1.5"/>
+  <g fill="#886600">
+    <rect x="37" y="156" width="5" height="5" rx="0.5"/><rect x="37" y="168" width="5" height="5" rx="0.5"/>
+    <rect x="37" y="180" width="5" height="5" rx="0.5"/><rect x="37" y="192" width="5" height="5" rx="0.5"/>
+    <rect x="37" y="204" width="5" height="5" rx="0.5"/><rect x="37" y="216" width="5" height="5" rx="0.5"/>
+    <rect x="120" y="156" width="5" height="5" rx="0.5"/><rect x="120" y="168" width="5" height="5" rx="0.5"/>
+    <rect x="120" y="180" width="5" height="5" rx="0.5"/><rect x="120" y="192" width="5" height="5" rx="0.5"/>
+  </g>
+  <text x="81" y="182" fill="#888844" font-size="11" font-family="monospace" text-anchor="middle">PMIC</text>
+  <text x="81" y="200" fill="#556633" font-size="9" font-family="monospace" text-anchor="middle">PM8950</text>
+  <rect x="390" y="148" width="82" height="82" rx="3" fill="#0a0a0a" stroke="#224466" stroke-width="1.5"/>
+  <text x="431" y="182" fill="#336688" font-size="11" font-family="monospace" text-anchor="middle">5G RF</text>
+  <text x="431" y="200" fill="#224455" font-size="9" font-family="monospace" text-anchor="middle">Modem</text>
+  <rect x="40" y="500" width="72" height="72" rx="3" fill="#0a0a0a" stroke="#334422" stroke-width="1.5"/>
+  <text x="76" y="530" fill="#446633" font-size="10" font-family="monospace" text-anchor="middle">WiFi 6E</text>
+  <text x="76" y="548" fill="#334422" font-size="9" font-family="monospace" text-anchor="middle">BT 5.3</text>
+  <rect x="400" y="500" width="72" height="72" rx="3" fill="#0a0a0a" stroke="#442222" stroke-width="1.5"/>
+  <text x="436" y="530" fill="#664433" font-size="10" font-family="monospace" text-anchor="middle">UFS 3.1</text>
+  <text x="436" y="548" fill="#442222" font-size="9" font-family="monospace" text-anchor="middle">256 GB</text>
+  <rect x="162" y="500" width="42" height="42" rx="2" fill="#0a0a0a" stroke="#665500" stroke-width="1"/>
+  <text x="183" y="519" fill="#886600" font-size="9" font-family="monospace" text-anchor="middle">IMU</text>
+  <text x="183" y="533" fill="#554400" font-size="8" font-family="monospace" text-anchor="middle">6-DoF</text>
+  <rect x="220" y="500" width="72" height="42" rx="2" fill="#0a0a0a" stroke="#224422" stroke-width="1"/>
+  <text x="256" y="519" fill="#336633" font-size="9" font-family="monospace" text-anchor="middle">Barometer</text>
+  <text x="256" y="533" fill="#224422" font-size="8" font-family="monospace" text-anchor="middle">LPS22HH</text>
+  <rect x="46" y="682" width="144" height="40" rx="3" fill="#0a0a0a" stroke="#664400" stroke-width="1.5"/>
+  <g fill="#b8922a">
+    <rect x="56" y="688" width="14" height="28" rx="1"/><rect x="76" y="688" width="14" height="28" rx="1"/>
+    <rect x="96" y="688" width="14" height="28" rx="1"/><rect x="116" y="688" width="14" height="28" rx="1"/>
+    <rect x="136" y="688" width="14" height="28" rx="1"/><rect x="156" y="688" width="14" height="28" rx="1"/>
+  </g>
+  <text x="118" y="742" fill="#664400" font-size="10" font-family="monospace" text-anchor="middle">Battery Connector</text>
+  <rect x="40" y="782" width="432" height="48" rx="4" fill="#0a0a0a" stroke="#555" stroke-width="1.5"/>
+  <g fill="#cc9900">
+    <rect x="58" y="792" width="12" height="28" rx="1"/><rect x="78" y="792" width="12" height="28" rx="1"/>
+    <rect x="98" y="792" width="12" height="28" rx="1"/><rect x="118" y="792" width="12" height="28" rx="1"/>
+    <rect x="138" y="792" width="12" height="28" rx="1"/><rect x="158" y="792" width="12" height="28" rx="1"/>
+    <rect x="178" y="792" width="12" height="28" rx="1"/><rect x="198" y="792" width="12" height="28" rx="1"/>
+  </g>
+  <text x="256" y="852" fill="#335544" font-size="10" font-family="monospace" text-anchor="middle">USB-C Connector Pads</text>
+  <g fill="#1a1a1a" stroke="#336633" stroke-width="0.8">
+    <rect x="385" y="352" width="16" height="8" rx="1"/><rect x="406" y="352" width="16" height="8" rx="1"/>
+    <rect x="385" y="366" width="16" height="8" rx="1"/><rect x="406" y="366" width="16" height="8" rx="1"/>
+    <rect x="385" y="380" width="10" height="10" rx="2"/><rect x="400" y="380" width="10" height="10" rx="2"/><rect x="415" y="380" width="10" height="10" rx="2"/>
+    <rect x="55" y="602" width="16" height="8" rx="1"/><rect x="76" y="602" width="16" height="8" rx="1"/>
+    <rect x="55" y="618" width="10" height="10" rx="2"/>
+  </g>
+  <g fill="none" stroke="#cc9900" stroke-width="1.5">
+    <circle cx="452" cy="604" r="5"/><circle cx="467" cy="624" r="5"/><circle cx="452" cy="644" r="5"/>
+  </g>
+  <text x="460" y="660" fill="#664400" font-size="9" font-family="monospace" text-anchor="middle">TP</text>
+  <text x="256" y="904" fill="#1a4a1a" font-size="17" font-family="monospace" text-anchor="middle">FallGuard v2.0</text>
+  <text x="256" y="924" fill="#112a11" font-size="12" font-family="monospace" text-anchor="middle">SisFall 1D-CNN  ·  Edge AI</text>
+  <text x="256" y="944" fill="#0a1e0a" font-size="11" font-family="monospace" text-anchor="middle">REV B  ·  2025</text>
+  <g stroke="#1a4a1a" stroke-width="1.5" fill="none">
+    <path d="M18,38 L18,18 L38,18"/><path d="M474,18 L494,18 L494,38"/>
+    <path d="M18,986 L18,1006 L38,1006"/><path d="M474,1006 L494,1006 L494,986"/>
+  </g>
+</svg>`, 4);
 
-  const FACE_TEXTURES = [texDisplay, texSoC, texIMU, texBattery, texPCB];
+  // (all textures now defined above via SVG loadSvg calls)
 
   // 每層規格：沿 Z 軸堆疊（前面 = 高 Z）
   const SPECS = [
