@@ -2731,10 +2731,10 @@ function initHW3D() {
   const layerObjs = SPECS.map((s, idx) => {
     const geo = new THREE.BoxGeometry(s.w, s.h, s.d);
 
-    // Per-face materials: side faces = plain, front (+z index 4) = textured
+    // Per-face materials: side faces = 半透明, front (+z index 4) = 紋理主視覺
     const sideMat = () => new THREE.MeshStandardMaterial({
-      color: s.col, emissive: s.emi, emissiveIntensity: s.emI * 0.6,
-      metalness: 0.8, roughness: 0.3, transparent: true, opacity: 1
+      color: s.col, emissive: s.emi, emissiveIntensity: s.emI * 0.5,
+      metalness: 0.7, roughness: 0.4, transparent: true, opacity: 0.18
     });
     const frontMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,              // 白色不遮蓋紋理
@@ -2745,8 +2745,8 @@ function initHW3D() {
       metalness: 0.1, roughness: 0.45, transparent: true, opacity: 1
     });
     const backMat = new THREE.MeshStandardMaterial({
-      color: s.col, emissive: s.emi, emissiveIntensity: s.emI * 0.4,
-      metalness: 0.85, roughness: 0.25, transparent: true, opacity: 1
+      color: s.col, emissive: s.emi, emissiveIntensity: s.emI * 0.3,
+      metalness: 0.85, roughness: 0.25, transparent: true, opacity: 0.12
     });
     // BoxGeometry face order: +x, -x, +y, -y, +z(front), -z(back)
     const materials = [sideMat(), sideMat(), sideMat(), sideMat(), frontMat, backMat];
@@ -2928,9 +2928,9 @@ function initHW3D() {
       layerObjs.forEach(o => {
         const mats = Array.isArray(o.mesh.material) ? o.mesh.material : [o.mesh.material];
         mats.forEach((m, mi) => {
-          m.opacity = 1;
-          // 前面(index 4)固定 0.45 保持紋理亮度，側面/背面恢復 spec emI
-          m.emissiveIntensity = mi === 4 ? 0.45 : mi === 5 ? o.spec.emI * 0.4 : o.spec.emI * 0.6;
+          // 恢復：前面不透明，側面 0.18，背面 0.12
+          m.opacity = mi === 4 ? 1 : mi === 5 ? 0.12 : 0.18;
+          m.emissiveIntensity = mi === 4 ? 0.45 : mi === 5 ? o.spec.emI * 0.3 : o.spec.emI * 0.5;
         });
       });
       hw3dSelectedIdx = -1;
@@ -2953,15 +2953,16 @@ function initHW3D() {
       const mats = Array.isArray(o.mesh.material) ? o.mesh.material : [o.mesh.material];
       if (j === i) {
         mats.forEach((m, mi) => {
-          m.opacity = 1;
-          // 前面用稍高但不過曝的強度，讓紋理亮起來；側面用強烈發光效果
+          // 選中層：前面不透明，側面稍微可見
+          m.opacity = mi === 4 ? 1 : mi === 5 ? 0.2 : 0.3;
           m.emissiveIntensity = mi === 4 ? 0.65 : o.spec.emI * 4 + 0.35;
         });
         o.targetZ = o.spec.zEx * 1.35; // 選中層往外拉
       } else {
         mats.forEach((m, mi) => {
-          m.opacity = 0.28;
-          m.emissiveIntensity = mi === 4 ? 0.15 : o.spec.emI * 0.15;
+          // 未選中層：前面半透明淡化，側面幾乎不見
+          m.opacity = mi === 4 ? 0.22 : 0.05;
+          m.emissiveIntensity = mi === 4 ? 0.12 : o.spec.emI * 0.08;
         });
         o.targetZ = o.spec.zEx;
       }
