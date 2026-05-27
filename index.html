@@ -723,15 +723,177 @@ h2.sec-title {
 .fr-v { font-size: 28px; font-weight: 700; display: block; }
 .fr-l { font-size: 11px; color: var(--dim); margin-top: 5px; text-transform: uppercase; letter-spacing: 1.5px; }
 
+/* ══ EXPLODED VIEW ══ */
+.hw-explode-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  flex: 1;
+  align-items: center;
+  margin-top: 16px;
+}
+.explode-scene {
+  perspective: 900px;
+  perspective-origin: 55% 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  cursor: pointer;
+}
+.explode-phone {
+  transform-style: preserve-3d;
+  transform: rotateX(22deg) rotateY(-32deg);
+  position: relative;
+  width: 150px;
+  height: 300px;
+  transition: transform 0.8s ease;
+}
+.explode-phone:hover {
+  transform: rotateX(22deg) rotateY(-28deg) scale(1.03);
+}
+.e-layer {
+  position: absolute;
+  width: 150px;
+  height: 300px;
+  transform-style: preserve-3d;
+  transition: transform 1.0s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.e-layer:nth-child(1) { transform: translateZ(8px); }
+.e-layer:nth-child(2) { transform: translateZ(4px); }
+.e-layer:nth-child(3) { transform: translateZ(0px); }
+.e-layer:nth-child(4) { transform: translateZ(-4px); }
+.e-layer:nth-child(5) { transform: translateZ(-8px); }
+
+/* Exploded state — set via JS */
+.e-layer.exploded-0 { transform: translateZ(200px); }
+.e-layer.exploded-1 { transform: translateZ(100px); }
+.e-layer.exploded-2 { transform: translateZ(0px); }
+.e-layer.exploded-3 { transform: translateZ(-100px); }
+.e-layer.exploded-4 { transform: translateZ(-200px); }
+
+.e-face {
+  position: absolute;
+  width: 150px;
+  height: 300px;
+  border-radius: 20px;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+/* Layer colours */
+.e-layer:nth-child(1) .e-face { background: linear-gradient(160deg,#1a2535,#243040); }
+.e-layer.layer-soc    .e-face { background: linear-gradient(160deg,#001c2a,#003348); border-color: rgba(0,212,255,0.4); box-shadow: 0 0 30px rgba(0,212,255,0.15); }
+.e-layer.layer-imu    .e-face { background: linear-gradient(160deg,#1a1500,#2a2200); border-color: rgba(255,208,96,0.4); box-shadow: 0 0 30px rgba(255,208,96,0.12); }
+.e-layer.layer-bat    .e-face { background: linear-gradient(160deg,#001a0a,#002a10); border-color: rgba(0,200,80,0.3); }
+.e-layer:nth-child(5) .e-face { background: linear-gradient(160deg,#0a1a10,#0f2318); }
+
+/* Side faces */
+.e-side-top {
+  position: absolute;
+  width: 150px;
+  height: 20px;
+  background: rgba(255,255,255,0.06);
+  top: 0;
+  transform: rotateX(90deg);
+  transform-origin: top;
+}
+.e-side-left {
+  position: absolute;
+  width: 20px;
+  height: 300px;
+  background: rgba(255,255,255,0.04);
+  left: 0;
+  transform: rotateY(-90deg);
+  transform-origin: left;
+}
+.e-face-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+.e-icon { font-size: 32px; }
+.e-face-label { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; }
+.soc-label { color: var(--cyan) !important; }
+.imu-label { color: var(--gold) !important; }
+
+/* Chip grid for SoC layer */
+.chip-grid {
+  width: 60px; height: 60px;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,212,255,0.3) 0px, rgba(0,212,255,0.3) 1px, transparent 1px, transparent 10px),
+    repeating-linear-gradient(90deg, rgba(0,212,255,0.3) 0px, rgba(0,212,255,0.3) 1px, transparent 1px, transparent 10px);
+  border: 1px solid rgba(0,212,255,0.5);
+  border-radius: 4px;
+  box-shadow: 0 0 16px rgba(0,212,255,0.4);
+}
+/* PCB pattern */
+.pcb-pattern {
+  width: 80px; height: 50px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,180,100,0.4) 0px, rgba(0,180,100,0.4) 2px, transparent 2px, transparent 18px);
+  border-top: 1px solid rgba(0,200,100,0.4);
+  border-bottom: 1px solid rgba(0,200,100,0.4);
+}
+
+/* Legend */
+.explode-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--border2);
+  transition: border-color 0.3s, background 0.3s;
+  cursor: pointer;
+}
+.legend-item:hover { border-color: var(--border); }
+.legend-highlight { border-color: rgba(0,212,255,0.2) !important; background: rgba(0,212,255,0.04) !important; }
+.legend-item.layer-imu-legend { border-color: rgba(255,208,96,0.2) !important; background: rgba(255,208,96,0.04) !important; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.legend-name { font-size: 13px; font-weight: 600; }
+.legend-sub { font-size: 12px; color: var(--dim); margin-top: 2px; }
+.explode-cta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--dim);
+  margin-top: 4px;
+}
+.explode-conclusion {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: rgba(0,230,118,0.04);
+  border: 1px solid rgba(0,230,118,0.2);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* Layer active highlight when hovering legend */
+.legend-item.active-legend { border-color: var(--cyan) !important; }
+
 </style>
 </head>
 <body>
 
 <!-- HUD -->
-<div id="hud-num">1 / 8</div>
+<div id="hud-num">1 / 9</div>
 <div id="timer-hud" class="timer-hud" title="T 鍵開始/暫停，長按重置">10:00</div>
 <div class="fs-btn" id="fs-btn" title="F 鍵切換全螢幕" onclick="toggleFullscreen()">⛶</div>
-<div id="hud-bar"><div id="hud-fill" style="width:12.5%"></div></div>
+<div id="hud-bar"><div id="hud-fill" style="width:11.1%"></div></div>
 <div id="hud-dots"></div>
 <div class="nav-btn" id="nav-l" onclick="nav(-1)">&#8249;</div>
 <div class="nav-btn" id="nav-r" onclick="nav(1)">&#8250;</div>
@@ -771,15 +933,20 @@ h2.sec-title {
     <div class="menu-item" onclick="jumpTo(5)">
       <span class="mi-num">6</span>
       <span class="mi-title">消滅專用硬體</span>
-      <span class="mi-time">6:45–8:00</span>
+      <span class="mi-time">6:45–7:30</span>
     </div>
     <div class="menu-item" onclick="jumpTo(6)">
       <span class="mi-num">7</span>
-      <span class="mi-title">佛偈</span>
-      <span class="mi-time">8:00–9:00</span>
+      <span class="mi-title">解構你的口袋</span>
+      <span class="mi-time">6:45–8:00</span>
     </div>
     <div class="menu-item" onclick="jumpTo(7)">
       <span class="mi-num">8</span>
+      <span class="mi-title">佛偈</span>
+      <span class="mi-time">8:00–9:00</span>
+    </div>
+    <div class="menu-item" onclick="jumpTo(8)">
+      <span class="mi-num">9</span>
       <span class="mi-title">結語</span>
       <span class="mi-time">9:00–10:00</span>
     </div>
@@ -799,7 +966,7 @@ h2.sec-title {
       <span class="kd">上一張</span>
     </div>
     <div class="key-row">
-      <span class="k">1–8</span>
+      <span class="k">1–9</span>
       <span class="kd">直接跳到指定頁</span>
     </div>
     <div class="key-row">
@@ -1187,11 +1354,133 @@ h2.sec-title {
   <div class="nohw-headline" id="nohw-hl">
     你的口袋裡，已經有了一台跌倒偵測機。
   </div>
-  <div class="cue-bar">按空白鍵顯示結語 · 下一張是佛偈</div>
+  <div class="cue-bar">按空白鍵顯示結語 · 下一張是硬體解構</div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════
-     S7 — BUDDHIST QUOTE
+     S7 — HARDWARE EXPLODED VIEW
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s-hw">
+  <div class="slide-header">
+    <span class="act-label">硬體解構 · 你已擁有的一切</span>
+    <h2 class="sec-title">解構<span class="accent">你的口袋</span></h2>
+  </div>
+
+  <div class="hw-explode-wrap">
+    <!-- 左：3D 爆炸圖 -->
+    <div class="explode-scene" id="explode-scene">
+      <div class="explode-phone" id="explode-phone">
+        <!-- 每層：由上到下 index 0-4 -->
+        <div class="e-layer" id="el0" data-z="200">
+          <div class="e-face">
+            <div class="e-face-content">
+              <span class="e-icon">🪟</span>
+              <span class="e-face-label">Display</span>
+            </div>
+          </div>
+          <div class="e-side-top"></div>
+          <div class="e-side-left"></div>
+        </div>
+        <div class="e-layer layer-soc" id="el1" data-z="100">
+          <div class="e-face">
+            <div class="e-face-content">
+              <div class="chip-grid"></div>
+              <span class="e-face-label soc-label">SoC</span>
+            </div>
+          </div>
+          <div class="e-side-top"></div>
+          <div class="e-side-left"></div>
+        </div>
+        <div class="e-layer layer-imu" id="el2" data-z="0">
+          <div class="e-face">
+            <div class="e-face-content">
+              <span class="e-icon">📡</span>
+              <span class="e-face-label imu-label">IMU</span>
+            </div>
+          </div>
+          <div class="e-side-top"></div>
+          <div class="e-side-left"></div>
+        </div>
+        <div class="e-layer layer-bat" id="el3" data-z="-100">
+          <div class="e-face">
+            <div class="e-face-content">
+              <span class="e-icon">🔋</span>
+              <span class="e-face-label">Battery</span>
+            </div>
+          </div>
+          <div class="e-side-top"></div>
+          <div class="e-side-left"></div>
+        </div>
+        <div class="e-layer layer-pcb" id="el4" data-z="-200">
+          <div class="e-face">
+            <div class="e-face-content">
+              <div class="pcb-pattern"></div>
+              <span class="e-face-label">PCB</span>
+            </div>
+          </div>
+          <div class="e-side-top"></div>
+          <div class="e-side-left"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：圖例 -->
+    <div class="explode-legend" id="explode-legend">
+      <div class="legend-item" data-layer="0">
+        <div class="legend-dot" style="background:#aabbcc"></div>
+        <div>
+          <div class="legend-name">Display</div>
+          <div class="legend-sub">你的螢幕</div>
+        </div>
+      </div>
+      <div class="legend-item legend-highlight" data-layer="1">
+        <div class="legend-dot" style="background:var(--cyan)"></div>
+        <div>
+          <div class="legend-name accent">SoC · CPU · GPU · NPU</div>
+          <div class="legend-sub accent">✦ ONNX Runtime 推論在這裡 · 0.17ms</div>
+        </div>
+      </div>
+      <div class="legend-item legend-highlight" data-layer="2">
+        <div class="legend-dot" style="background:var(--gold)"></div>
+        <div>
+          <div class="legend-name gold">IMU Sensor</div>
+          <div class="legend-sub gold">✦ 200Hz 加速度計 + 陀螺儀</div>
+        </div>
+      </div>
+      <div class="legend-item" data-layer="3">
+        <div class="legend-dot" style="background:#44aa66"></div>
+        <div>
+          <div class="legend-name">Battery</div>
+          <div class="legend-sub">推論 0.17ms · 功耗可忽略</div>
+        </div>
+      </div>
+      <div class="legend-item" data-layer="4">
+        <div class="legend-dot" style="background:#336655"></div>
+        <div>
+          <div class="legend-name">Motherboard</div>
+          <div class="legend-sub">所有元件已整合，無需額外採購</div>
+        </div>
+      </div>
+
+      <div class="explode-cta" id="explode-cta">
+        <span>點擊裝置或按</span>
+        <kbd class="kbd">Space</kbd>
+        <span>分解</span>
+      </div>
+
+      <div class="explode-conclusion">
+        <span class="green" style="font-size:15px;font-weight:700">846 KB model</span>
+        <span style="color:var(--dim)"> + ONNX Runtime Android SDK + </span>
+        <span class="accent" style="font-weight:700">你的手機</span>
+        <span style="color:var(--dim)"> = 完整跌倒偵測系統</span>
+      </div>
+    </div>
+  </div>
+  <div class="cue-bar">點擊手機或按 Space 觸發分解動畫 · 再按一次還原</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S8 — BUDDHIST QUOTE
 ══════════════════════════════════════════════════════ -->
 <section class="slide" id="s7">
   <div style="position:absolute;top:32px;left:80px">
@@ -1236,7 +1525,7 @@ h2.sec-title {
 </section>
 
 <!-- ══════════════════════════════════════════════════════
-     S8 — CLOSING
+     S9 — CLOSING
 ══════════════════════════════════════════════════════ -->
 <section class="slide" id="s8">
   <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
@@ -1378,13 +1667,17 @@ function onEnter(n) {
     stopFeedAnim();    // 離開 S5 停止日誌
   }
   if (n === 5) { noHwShown = false; }
-  if (n === 6) {
+  // s-hw：硬體解構爆炸圖
+  if (SLIDES[n] && SLIDES[n].id === 's-hw') initExplodeSlide();
+  // s7（原 s7）：佛偈逐行顯示
+  if (SLIDES[n] && SLIDES[n].id === 's7') {
     punchShown = false;
     document.getElementById('punchline').classList.remove('show');
     document.getElementById('space-hint').classList.remove('hidden');
     runPoemLines(); // 逐行顯示詩句
   }
-  if (n === 7) runClosing();
+  // s8（原 s8）：結語動畫
+  if (SLIDES[n] && SLIDES[n].id === 's8') runClosing();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1814,14 +2107,19 @@ document.addEventListener('keydown', e => {
 
   if (fwd) {
     e.preventDefault();
-    // Slide 6 (index 5): space shows headline first
+    // S6 (index 5): Space 先顯示結語標語
     if (cur === 5 && !noHwShown) {
       document.getElementById('nohw-hl').classList.add('show');
       noHwShown = true;
       return;
     }
-    // Slide 7 (index 6): space shows punchline first
-    if (cur === 6 && !punchShown) {
+    // s-hw：Space 先觸發分解動畫，已分解則換頁
+    if (SLIDES[cur] && SLIDES[cur].id === 's-hw' && !hwExploded) {
+      toggleExplode();
+      return;
+    }
+    // s7（佛偈）：Space 先顯示 punchline
+    if (SLIDES[cur] && SLIDES[cur].id === 's7' && !punchShown) {
       document.getElementById('punchline').classList.add('show');
       document.getElementById('space-hint').classList.add('hidden');
       punchShown = true;
@@ -1880,6 +2178,54 @@ document.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - tx;
   if (Math.abs(dx) > 48) nav(dx < 0 ? 1 : -1);
 });
+
+/* ══════════════════════════════════════════════════════
+   EXPLODED VIEW
+══════════════════════════════════════════════════════ */
+let hwExploded = false;
+
+function toggleExplode() {
+  hwExploded = !hwExploded;
+  const layers = document.querySelectorAll('.e-layer');
+  layers.forEach((layer, i) => {
+    if (hwExploded) {
+      // 錯開時間，讓分解有動態感
+      setTimeout(() => layer.classList.add(`exploded-${i}`), i * 80);
+    } else {
+      layer.classList.remove(`exploded-0`,`exploded-1`,`exploded-2`,`exploded-3`,`exploded-4`);
+    }
+  });
+  const cta = document.getElementById('explode-cta');
+  if (cta) cta.style.opacity = hwExploded ? '0' : '1';
+}
+
+function initExplodeSlide() {
+  hwExploded = false;
+  // 重置所有圖層
+  document.querySelectorAll('.e-layer').forEach(l => {
+    l.classList.remove('exploded-0','exploded-1','exploded-2','exploded-3','exploded-4');
+  });
+  const cta = document.getElementById('explode-cta');
+  if (cta) cta.style.opacity = '1';
+
+  // 點擊手機觸發分解
+  const scene = document.getElementById('explode-scene');
+  if (scene) {
+    scene.onclick = (e) => { e.stopPropagation(); toggleExplode(); };
+  }
+
+  // 圖例 hover 高亮對應圖層
+  document.querySelectorAll('.legend-item').forEach((item, i) => {
+    item.onmouseenter = () => {
+      const layer = document.getElementById(`el${i}`);
+      if (layer) layer.style.filter = 'brightness(1.4)';
+    };
+    item.onmouseleave = () => {
+      const layer = document.getElementById(`el${i}`);
+      if (layer) layer.style.filter = '';
+    };
+  });
+}
 
 /* ══════════════════════════════════════════════════════
    INIT
