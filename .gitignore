@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 *.pth
 *.onnx
+!models/best_1dcnn.onnx
 *.engine
 results/
 .venv/
