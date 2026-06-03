@@ -8,7 +8,7 @@
 <meta property="og:description" content="用口袋裡的設備即時偵測跌倒，無需額外硬體，0.34ms 推論延遲">
 <meta property="og:type" content="website">
 <meta property="og:image" content="">
-<title>跌倒偵測 Edge AI 系統 — 北大比賽 2026</title>
+<title>跌倒偵測 Edge AI 系統 — 台北大學競賽 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -955,7 +955,13 @@ h2.sec-title {
   line-height: 1.9;
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Three.js：本機 vendor 優先（離線可用），載入失敗才回退 CDN（僅線上有效） -->
+<script src="vendor/three.min.js"></script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+  }
+</script>
 </head>
 <body>
 
@@ -1331,27 +1337,22 @@ h2.sec-title {
       <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">精度與召回率<strong style="color:var(--gold)">同步提升</strong>，不是犧牲一方換另一方</div>
     </div>
   </div>
+  <div style="font-size:13px;color:var(--cyan);font-weight:700;letter-spacing:1px;margin-bottom:8px">📊 Ablation Study　<span style="color:var(--dim);font-weight:400;font-size:11px">逐步加組件、相同流程重訓 · SisFall 測試集真實數據</span></div>
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;font-size:12px">
-    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;background:var(--bg3);padding:8px 0">
-      <div style="color:var(--dim)">指標</div>
-      <div style="color:var(--dim)">1D-CNN<br><span style="font-size:10px">baseline</span></div>
-      <div style="color:var(--dim)">LISTA<br><span style="font-size:10px">純 Deep Unfolding</span></div>
-      <div style="color:var(--cyan);font-weight:700">FallHybridDU ★<br><span style="font-size:10px">CNN + DU 嵌入</span></div>
+    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;background:var(--bg3);padding:8px 0">
+      <div style="color:var(--dim);text-align:left;padding-left:14px">Configuration</div>
+      <div style="color:var(--dim)">Accuracy</div>
+      <div style="color:var(--dim)">F1</div>
+      <div style="color:var(--dim)">Sparsity</div>
     </div>
-    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;color:var(--dim)">Accuracy</div><div style="padding:9px">90.9%</div><div style="padding:9px">90.90%</div><div style="padding:9px;color:var(--green);font-weight:700">93.22% ↑</div>
+    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim);text-align:left;padding-left:14px">A. 1D-CNN (baseline)</div><div style="padding:9px">90.9%</div><div style="padding:9px">86.6%</div><div style="padding:9px;color:var(--dim)">—</div>
     </div>
-    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;color:var(--red)">Recall</div><div style="padding:9px">87.0%</div><div style="padding:9px">86.3%</div><div style="padding:9px;color:var(--red);font-weight:700">93.17% ↑↑</div>
+    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim);text-align:left;padding-left:14px">B. + Deep Unfolding</div><div style="padding:9px;color:var(--green)">92.1%</div><div style="padding:9px;color:var(--green)">88.8%</div><div style="padding:9px;color:var(--dim)">~0%</div>
     </div>
-    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;color:var(--dim)">F1 Score</div><div style="padding:9px">86.62%</div><div style="padding:9px">86.53%</div><div style="padding:9px;color:var(--gold);font-weight:700">90.29% ↑</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;color:var(--dim)">模型大小</div><div style="padding:9px">846 KB</div><div style="padding:9px;color:var(--cyan)">274 KB ↓</div><div style="padding:9px;color:var(--cyan)">709 KB</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;color:var(--dim)">參數量</div><div style="padding:9px">~217K</div><div style="padding:9px;color:var(--cyan)">88.9K ↓</div><div style="padding:9px">180K</div>
+    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;border-top:1px solid var(--cyan);background:rgba(0,212,255,.08)">
+      <div style="padding:9px;color:var(--cyan);font-weight:700;text-align:left;padding-left:14px">C. + L1 sparsity　★ Full</div><div style="padding:9px;color:var(--cyan);font-weight:700">93.2%</div><div style="padding:9px;color:var(--cyan);font-weight:700">90.3%</div><div style="padding:9px;color:var(--cyan);font-weight:700">86%</div>
     </div>
   </div>
   <div class="dataset-bar">
@@ -1390,14 +1391,14 @@ h2.sec-title {
       <div style="padding:9px;font-size:13px">67.0%</div>
     </div>
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">Random Forest（輕量）</div>
-      <div style="padding:9px;font-size:13px">83.7%</div>
-      <div style="padding:9px;font-size:13px">72.0%</div>
+      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">Random Forest</div>
+      <div style="padding:9px;font-size:13px">84.7%</div>
+      <div style="padding:9px;font-size:13px">73.0%</div>
     </div>
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
       <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">XGBoost</div>
       <div style="padding:9px;font-size:13px">84.7%</div>
-      <div style="padding:9px;font-size:13px">73.0%</div>
+      <div style="padding:9px;font-size:13px">73.2%</div>
     </div>
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
       <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">1D-CNN</div>
@@ -2431,7 +2432,19 @@ let hw3dSelectedIdx = -1;
 
 function initHW3D() {
   const canvas = document.getElementById('hw3d-canvas');
-  if (!canvas || typeof THREE === 'undefined') return;
+  if (!canvas) return;
+  if (typeof THREE === 'undefined') {
+    // Three.js 未載入（多半是離線且 CDN 也失敗）→ 顯示提示，不要靜默空白
+    const wrap = document.getElementById('hw3d-canvas-wrap');
+    if (wrap && !wrap.querySelector('.hw3d-fallback')) {
+      const d = document.createElement('div');
+      d.className = 'hw3d-fallback';
+      d.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#7a8fa8;font-size:14px;line-height:1.9';
+      d.innerHTML = '⚠ 3D 模組需要 three.min.js<br>離線時請確認 <code style="color:#00d4ff">vendor/three.min.js</code> 存在';
+      wrap.appendChild(d);
+    }
+    return;
+  }
 
   // 銷毀上一個實例
   if (hw3d) { hw3d.dispose(); hw3d = null; }
