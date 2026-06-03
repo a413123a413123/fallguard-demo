@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跌倒偵測 Edge AI 系統 — 北大比賽 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════
+   TOKENS & RESET
+══════════════════════════════════════════════════════ */
+:root {
+  --bg:      #070c18;
+  --bg2:     #0c1428;
+  --bg3:     #111c35;
+  --cyan:    #00d4ff;
+  --cyan2:   #00a8cc;
+  --green:   #00e676;
+  --orange:  #ff6b35;
+  --gold:    #ffd060;
+  --purple:  #9b6dff;
+  --red:     #ff3b30;
+  --text:    #dce8f4;
+  --dim:     #7a8fa8;
+  --border:  rgba(0,212,255,.18);
+  --border2: rgba(255,255,255,.07);
+  --card-bg: rgba(255,255,255,.03);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk','Noto Sans TC','PingFang TC','Microsoft JhengHei',system-ui,sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════
+   SLIDE ENGINE
+══════════════════════════════════════════════════════ */
+#deck {
+  width: 100vw; height: 100vh;
+  position: relative;
+}
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding: 52px 80px 44px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .45s ease;
+  overflow: hidden;
+}
+.slide.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── HUD ── */
+#hud-num {
+  position: fixed; top: 18px; right: 28px;
+  font-size: 12px; color: var(--dim);
+  letter-spacing: 1.5px; z-index: 200;
+}
+#hud-bar {
+  position: fixed; bottom: 0; left: 0;
+  width: 100%; height: 3px;
+  background: rgba(255,255,255,.06); z-index: 200;
+}
+#hud-fill {
+  height: 100%;
+  background: linear-gradient(90deg,var(--cyan),var(--green));
+  transition: width .45s ease;
+}
+#hud-dots {
+  position: fixed; bottom: 12px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 7px; z-index: 200;
+}
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--dim); cursor: pointer;
+  transition: background .3s, transform .3s;
+}
+.dot.cur { background: var(--cyan); transform: scale(1.4); }
+.nav-btn {
+  position: fixed; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; color: var(--dim);
+  cursor: pointer; z-index: 200;
+  opacity: 0; transition: opacity .2s;
+  user-select: none;
+}
+body:hover .nav-btn { opacity: 1; }
+.nav-btn:hover { color: var(--cyan); opacity: 1 !important; }
+#nav-l { left: 8px; }
+#nav-r { right: 8px; }
+
+/* ══════════════════════════════════════════════════════
+   SHARED UTILITIES
+══════════════════════════════════════════════════════ */
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 13px;
+  border: 1px solid var(--cyan); border-radius: 20px;
+  font-size: 11px; color: var(--cyan);
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.act-label {
+  font-size: 11px; color: var(--dim);
+  letter-spacing: 2px; text-transform: uppercase;
+  display: block; margin-bottom: 10px;
+}
+h2.sec-title {
+  font-size: clamp(28px,3.8vw,46px);
+  font-weight: 700; line-height: 1.1;
+  letter-spacing: -.5px; margin-bottom: 0;
+}
+.accent  { color: var(--cyan); }
+.green   { color: var(--green); }
+.gold    { color: var(--gold); }
+.orange  { color: var(--orange); }
+.purple  { color: var(--purple); }
+.dim-c   { color: var(--dim); }
+.cue-bar {
+  position: absolute; bottom: 22px; left: 80px; right: 80px;
+  font-size: 11px; color: var(--dim);
+  display: flex; align-items: center; gap: 8px;
+}
+.cue-bar::before {
+  content: '▸'; color: var(--cyan); flex-shrink: 0;
+}
+
+/* grid bg used on several slides */
+.grid-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  pointer-events: none;
+}
+
+/* scan-line decoration */
+.scan::after {
+  content: '';
+  position: absolute; left: 0; width: 100%; height: 1px;
+  background: linear-gradient(90deg,transparent,rgba(0,212,255,.5),transparent);
+  animation: scan 5s linear infinite;
+  pointer-events: none;
+}
+@keyframes scan {
+  0%  { top:0;   opacity:.6; }
+  100%{ top:100%;opacity:.05;}
+}
+
+/* ══════════════════════════════════════════════════════
+   SLIDE 1 — COVER
+══════════════════════════════════════════════════════ */
+#s1 {
+  background:
+    radial-gradient(ellipse at 18% 55%, rgba(0,212,255,.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 82% 20%, rgba(0,230,118,.05) 0%, transparent 50%),
+    var(--bg);
+  justify-content: center;
+}
+.cover-eyebrow { font-size: 13px; color: var(--dim); letter-spacing: 2px; margin-bottom: 12px; }
+.cover-title {
+  font-size: clamp(42px,6vw,78px);
+  font-weight: 700; line-height: 1.05;
+  letter-spacing: -1.5px;
+}
+.cover-stack {
+  margin-top: 18px;
+  font-size: clamp(13px,1.5vw,17px);
+  color: var(--dim);
+  display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+}
+.cover-stack span { color: var(--text); }
+.cover-stack .x   { color: var(--dim); margin: 0 6px; }
+.cover-metrics {
+  display: flex; gap: 48px;
+  margin-top: 44px;
+}
+.cm { text-align: left; }
+.cm-val {
+  font-size: clamp(30px,3.8vw,50px);
+  font-weight: 700; display: block; line-height: 1;
+}
+.cm-label {
+  font-size: 11px; color: var(--dim);
+  margin-top: 7px; letter-spacing: 1.5px; text-transform: uppercase;
+}
+.cover-meta {
+  margin-top: 44px;
+  display: flex; gap: 28px;
+  font-size: 13px; color: var(--dim);
+}
+.cover-meta span { display: flex; align-items: center; gap: 6px; }
+
+/* ══════════════════════════════════════════════════════
+   SLIDE 2 — PROBLEM
+══════════════════════════════════════════════════════ */
+#s2 { background: var(--bg); }
+.prob-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  flex: 1; align-items: center;
+}
+.stat-big { text-align: center; padding: 28px; }
+.stat-big .n {
+  font-size: clamp(64px,9vw,110px);
+  font-weight: 700; color: var(--orange);
+  line-height: 1; display: block;
+}
+.stat-big .u { font-size: 22px; color: var(--dim); }
+.stat-big .desc {
+  margin-top: 12px; font-size: 15px;
+  color: var(--text); line-height: 1.7;
+}
+.prob-items { display: flex; flex-direction: column; gap: 16px; }
+.prob-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 18px 20px;
+  background: var(--card-bg);
+  border: 1px solid rgba(255,107,53,.2);
+  border-radius: 12px;
+}
+.prob-item .ico { font-size: 26px; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.prob-head { font-size: 14px; font-weight: 700; color: var(--orange); display: block; margin-bottom: 4px; }
+.prob-desc { font-size: 13px; color: var(--dim); line-height: 1.7; }
+
+/* ══════════════════════════════════════════════════════
+   SLIDE 3 — DATA & MODEL
+══════════════════════════════════════════════════════ */
+#s3 { background: var(--bg); }
+.arch-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; margin: 24px 0 18px; flex-wrap: wrap;
+}
+.ab {
+  background: rgba(0,212,255,.06);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 18px; text-align: center;
+  min-width: 90px;
+}
+.ab-t { font-size: 12px; font-weight: 700; color: var(--cyan); display: block; }
+.ab-s { font-size: 10px; color: var(--dim); margin-top: 3px; line-height: 1.4; }
+.ab-arr { color: var(--dim); font-size: 18px; padding: 0 6px; }
+.model-stats {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 16px; margin-top: 20px;
+}
+.msc {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px; text-align: center;
+}
+.msc-v { font-size: 26px; font-weight: 700; display: block; color: var(--cyan); }
+.msc-l { font-size: 11px; color: var(--dim); margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
+.dataset-bar {
+  margin-top: 18px; padding: 14px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  font-size: 13px; color: var(--dim);
+  display: flex; flex-wrap: wrap; gap: 20px; align-items: center;
+}
+.dataset-bar strong { color: var(--text); }
+
+/* ══════════════════════════════════════════════════════
+   SLIDE 4 — BENCHMARK
+══════════════════════════════════════════════════════ */
+#s4 { background: var(--bg); }
+.bench-hero { text-align: center; margin: 16px 0 32px; }
+.bh-num {
+  font-size: clamp(64px,10vw,120px);
+  font-weight: 700; color: var(--green);
+  line-height: 1; display: block;
+}
+.bh-sub { font-size: 16px; color: var(--dim); margin-top: 8px; }
+.chart {
+  max-width: 680px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 13px;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: 170px 1fr 110px;
+  align-items: center; gap: 12px;
+}
+.bar-name  { font-size: 13px; text-align: right; }
+.bar-track {
+  height: 34px;
+  background: rgba(255,255,255,.05);
+  border-radius: 6px; overflow: hidden;
+}
+.bar-fill {
+  height: 100%; border-radius: 6px;
+  width: 0; position: relative;
+  transition: width 1.3s cubic-bezier(.2,0,.1,1);
+}
+.bar-fill.b-cpu  { background: linear-gradient(90deg,#556,#889); }
+.bar-fill.b-pgpu { background: linear-gradient(90deg,#4477aa,#66aacc); }
+.bar-fill.b-onnx {
+  background: linear-gradient(90deg,#00d4ff,#00ff88);
+}
+.bar-fill.b-trt  { background: linear-gradient(90deg,#00b8d9,#00e076); }
+.bar-fill.b-onnx::after {
+  content: '3.9×';
+  position: absolute; right: 10px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px; font-weight: 800;
+  color: var(--bg);
+}
+.bar-ms { font-size: 13px; color: var(--dim); }
+.bar-ms.hi { color: var(--green); font-weight: 700; }
+.bench-note {
+  text-align: center; margin-top: 20px;
+  font-size: 12px; color: var(--dim);
+  display: flex; justify-content: center; gap: 20px;
+}
+
+/* ══════════════════════════════════════════════════════
+   SLIDE 5 — DEMO ARCHITECTURE
+══════════════════════════════════════════════════════ */
+#s5 { background: var(--bg); }
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 72px 1fr;
+  gap: 20px; flex: 1; align-items: center;
+  margin-top: 24px;
+}
+.dev-card {
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px;
+  text-align: center;
+  background: var(--card-bg);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.dev-card.glow {
+  border-color: rgba(0,230,118,.45);
+  background: rgba(0,230,118,.03);
+  box-shadow: 0 0 40px rgba(0,230,118,.06);
+}
+.dev-ico { font-size: 52px; display: block; }
+.dev-name { font-size: 20px; font-weight: 700; }
+.dev-role { font-size: 13px; color: var(--dim); line-height: 1.7; }
+.arr-col {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+}
+.arr-line {
+  width: 2px; height: 60px;
+  background: linear-gradient(180deg,var(--cyan),var(--green));
+  position: relative;
+}
+.arr-line::after {
+  content: '▼';
+  position: absolute; bottom: -14px; left: -8px;
+  color: var(--green); font-size: 16px;
+}
+.arr-txt { font-size: 11px; color: var(--dim); text-align: center; line-height: 1.5; margin-top: 10px; }
+.alarm-pill {
+  display: inline-block; margin-top: 8px;
+  padding: 7px 18px;
+  background: rgba(255,60,48,.1);
+  border: 1px solid rgba(255,60,48,.4);
+  border-radius: 8px;
+  font-size: 13px; font-weight: 700; color: var(--red);
+  animation: pulse-alarm 1.4s ease-in-out infinite;
+}
+@keyframes pulse-alarm {
+  0%,100%{ box-shadow: 0 0 0 0 rgba(255,60,48,0); }
+  50%    { box-shadow: 0 0 14px 4px rgba(255,60,48,.3); }
+}
+.demo-modes {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px; margin-top: 20px;
+}
+.dm-card {
+  padding: 14px 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border2);
+  border-radius: 10px; font-size: 13px; color: var(--dim);
+}
+.dm-card strong { color: var(--cyan); display: block; margin-bottom: 4px; }
+
+/* ══════════════════════════════════════════════════════
+   SLIDE 6 — NO HARDWARE
+══════════════════════════════════════════════════════ */
+#s6 { background: var(--bg); }
+.nohw-grid {
+  display: grid;
+  grid-template-columns: 1fr 48px 1fr;
+  gap: 28px; flex: 1; align-items: stretch;
+  margin-top: 22px;
+}
+.hw-card {
+  border: 1px solid rgba(255,107,53,.25);
+  border-radius: 16px; padding: 28px;
+  background: rgba(255,107,53,.03);
+}
+.hw-card.ours {
+  border-color: rgba(0,230,118,.35);
+  background: rgba(0,230,118,.03);
+}
+.hw-title { font-size: 17px; font-weight: 700; display: block; margin-bottom: 16px; }
+.hw-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.hw-list li { font-size: 14px; color: var(--dim); display: flex; align-items: center; gap: 10px; }
+.hw-list li .i { font-size: 18px; }
+.hw-bottom { margin-top: 16px; }
+.size-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(0,212,255,.1);
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  font-size: 17px; font-weight: 700; color: var(--cyan);
+}
+.vs-col {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: 700; color: var(--dim);
+}
+.nohw-headline {
+  margin-top: 20px; text-align: center;
+  font-size: 17px; color: var(--green); font-weight: 600;
+  opacity: 0; transition: opacity .6s ease .2s;
+}
+.nohw-headline.show { opacity: 1; }
+
+/* ══════════════════════════════════════════════════════
+   SLIDE 7 — BUDDHIST QUOTE
+══════════════════════════════════════════════════════ */
+#s7 {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255,208,96,.04) 0%, transparent 65%),
+    var(--bg);
+  justify-content: center; align-items: center; text-align: center;
+}
+.buddha-row {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  gap: 40px; width: 100%; max-width: 860px;
+  margin-bottom: 44px;
+}
+.monk-box {
+  border-radius: 16px; padding: 30px;
+}
+.monk-box.shexiu {
+  border: 1px solid rgba(120,130,180,.25);
+  background: rgba(100,110,180,.05);
+}
+.monk-box.huineng {
+  border: 1px solid rgba(255,208,96,.3);
+  background: rgba(255,208,96,.05);
+}
+.monk-name {
+  font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+  display: block; margin-bottom: 18px;
+}
+.shexiu .monk-name { color: var(--dim); }
+.huineng .monk-name { color: var(--gold); }
+.poem {
+  font-size: clamp(16px,2.1vw,22px);
+  line-height: 2.2; letter-spacing: 2px;
+}
+.shexiu .poem { color: var(--dim); }
+.huineng .poem { color: var(--gold); font-weight: 500; }
+.monk-sub {
+  margin-top: 14px; font-size: 12px; font-style: italic;
+  color: var(--dim);
+}
+.vs-col-b {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--dim); font-weight: 300;
+}
+.punchline {
+  font-size: clamp(17px,2.3vw,26px);
+  font-weight: 600; color: var(--green);
+  letter-spacing: 1.5px; line-height: 1.8;
+  opacity: 0; transform: translateY(14px);
+  transition: opacity .8s ease, transform .8s ease;
+}
+.punchline.show { opacity: 1; transform: translateY(0); }
+.punchline .sub {
+  font-size: .6em; color: var(--dim); font-weight: 400;
+  display: block; margin-top: 8px; letter-spacing: 1px;
+}
+.space-hint {
+  margin-top: 20px; font-size: 12px; color: var(--dim);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  opacity: 1; transition: opacity .5s;
+}
+.space-hint.hidden { opacity: 0; pointer-events: none; }
+.kbd { display: inline-block; padding: 2px 8px; border: 1px solid var(--dim); border-radius: 4px; font-size: 11px; }
+
+/* ══════════════════════════════════════════════════════
+   SLIDE 8 — CLOSING
+══════════════════════════════════════════════════════ */
+#s8 {
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(0,212,255,.06) 0%, transparent 60%),
+    var(--bg);
+  justify-content: center; align-items: center; text-align: center;
+}
+.cl-wrap { max-width: 720px; }
+.cl-line {
+  font-size: clamp(20px,2.8vw,34px);
+  font-weight: 300; line-height: 1.65;
+  display: block; opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.cl-line.show { opacity: 1; transform: translateY(0); }
+.cl-line.em {
+  font-weight: 700; font-size: clamp(22px,3.4vw,42px);
+  color: var(--cyan); margin-top: 22px;
+}
+.final-row {
+  display: flex; justify-content: center;
+  gap: 52px; margin-top: 52px;
+  opacity: 0; transition: opacity .8s ease;
+}
+.final-row.show { opacity: 1; }
+.fr-item { text-align: center; }
+.fr-v { font-size: 28px; font-weight: 700; display: block; }
+.fr-l { font-size: 11px; color: var(--dim); margin-top: 5px; text-transform: uppercase; letter-spacing: 1.5px; }
+
+</style>
+</head>
+<body>
+
+<!-- HUD -->
+<div id="hud-num">1 / 8</div>
+<div id="hud-bar"><div id="hud-fill" style="width:12.5%"></div></div>
+<div id="hud-dots"></div>
+<div class="nav-btn" id="nav-l" onclick="nav(-1)">&#8249;</div>
+<div class="nav-btn" id="nav-r" onclick="nav(1)">&#8250;</div>
+
+<div id="deck">
+
+<!-- ══════════════════════════════════════════════════════
+     S1 — COVER
+══════════════════════════════════════════════════════ -->
+<section class="slide active grid-bg scan" id="s1">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="tag">Edge AI · Fall Detection · 2026</div>
+    <div class="cover-eyebrow" style="font-size:15px;line-height:1.55;color:var(--text);font-weight:600;letter-spacing:0;text-transform:none;max-width:620px">
+      An Embedded Life Monitoring System<br>Based on 1D Convolutional Neural Networks
+    </div>
+    <div class="cover-title">
+      Fall<span class="accent">Guard</span><br>
+      <span style="font-weight:300;font-size:.6em;color:var(--dim)">Edge AI · 1D-CNN · Deep Unfolding</span>
+    </div>
+
+    <div class="cover-stack">
+      <span>1D-CNN</span>
+      <span class="x">×</span>
+      <span class="accent" style="font-weight:600">ONNX Runtime CUDA EP</span>
+      <span class="x">×</span>
+      <span>NVIDIA Warp Particle FX</span>
+    </div>
+
+    <div class="cover-metrics">
+      <div class="cm">
+        <span class="cm-val accent" data-cnt="0.34" data-dp="2">0.00</span>
+        <div class="cm-label">ms · Inference</div>
+      </div>
+      <div class="cm">
+        <span class="cm-val green" data-cnt="93.2" data-dp="1">0.0</span>
+        <div class="cm-label">% · Accuracy</div>
+      </div>
+      <div class="cm">
+        <span class="cm-val gold" data-cnt="709" data-dp="0">0</span>
+        <div class="cm-label">KB · Model Size</div>
+      </div>
+      <div class="cm">
+        <span class="cm-val purple" data-cnt="153705" data-dp="0">0</span>
+        <div class="cm-label">Training Windows</div>
+      </div>
+    </div>
+
+    <div class="cover-meta">
+      <span>📅 2026-06-04</span>
+      <span>📍 台北</span>
+      <span>📊 SisFall · 200Hz · 6-ch IMU</span>
+      <span>🏆 台北大學競賽</span>
+    </div>
+  </div>
+  <div class="cue-bar">上台前確認：demo_sim.py 開啟 · R 鍵重置 · 音效開啟 · 手機連線中</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S2 — PROBLEM
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s2">
+  <div>
+    <span class="act-label">第一幕 · 問題定義 · 0:00–3:30</span>
+    <h2 class="sec-title">為什麼這件事<span class="accent">很難？</span></h2>
+  </div>
+
+  <div class="prob-grid" style="margin-top:28px">
+    <div class="stat-big">
+      <span class="n" id="prob-n">6,800</span>
+      <span class="u">萬</span>
+      <div class="desc">
+        全球每年跌倒事故<br>
+        <span style="color:var(--orange)">現有方案太慢、太貴、難部署</span>
+      </div>
+      <div style="margin-top:18px;padding:16px;background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.2);border-radius:10px;font-size:13px;color:var(--dim);line-height:1.8">
+        長照機構 · 獨居老人 · 工廠安全<br>
+        每一秒都是關鍵
+      </div>
+    </div>
+
+    <ul class="prob-items">
+      <li class="prob-item">
+        <span class="ico">☁</span>
+        <div>
+          <span class="prob-head">雲端方案</span>
+          <span class="prob-desc">感測器 → 伺服器 → 警報<br>延遲 <strong style="color:var(--orange)">200–800ms</strong>，頭已撞地</span>
+        </div>
+      </li>
+      <li class="prob-item">
+        <span class="ico">⚙</span>
+        <div>
+          <span class="prob-head">傳統 Edge</span>
+          <span class="prob-desc">Jetson Nano + Raspberry Pi + 客製 MCU<br><strong style="color:var(--orange)">採購成本高、整合複雜、難維護</strong></span>
+        </div>
+      </li>
+      <li class="prob-item">
+        <span class="ico">🎯</span>
+        <div>
+          <span class="prob-head">我們的問題意識</span>
+          <span class="prob-desc">能否用<strong style="color:var(--cyan)">口袋裡的設備</strong>完成即時偵測？<br>不買新硬體 · 不上雲 · 毫秒等級回應</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div class="cue-bar">跌倒 + 警報後轉到此頁 — 「先退一步說為什麼這件事很難」</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S3 — DATA & MODEL
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s3">
+  <div>
+    <span class="act-label">第三幕 · 工程師模式 · 3:30–5:00</span>
+    <h2 class="sec-title">資料集與<span class="accent">模型架構</span></h2>
+  </div>
+
+  <div class="arch-wrap">
+    <div class="ab">
+      <span class="ab-t">Input</span>
+      <span class="ab-s">200×6<br>200Hz IMU</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab">
+      <span class="ab-t">Conv1D ①</span>
+      <span class="ab-s">32 filters<br>k=7, ReLU</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab">
+      <span class="ab-t">Conv1D ②</span>
+      <span class="ab-s">64 filters<br>k=5, ReLU</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab">
+      <span class="ab-t">GlobalAvgPool</span>
+      <span class="ab-s">時序壓縮</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab">
+      <span class="ab-t">FC + Sigmoid</span>
+      <span class="ab-s">跌倒機率<br>[0, 1]</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab" style="border-color:rgba(0,230,118,.4);background:rgba(0,230,118,.05)">
+      <span class="ab-t green">ONNX Export</span>
+      <span class="ab-s">846 KB<br>CUDA EP</span>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:var(--dim);margin-bottom:16px">
+    Grad-CAM 1D — 可視化模型注意力時間區間 &nbsp;·&nbsp; 滾動正規化 — 跨設備泛化無需重新訓練
+  </div>
+
+  <div class="model-stats">
+    <div class="msc">
+      <span class="msc-v accent">153,705</span>
+      <span class="msc-l">訓練視窗</span>
+    </div>
+    <div class="msc">
+      <span class="msc-v green">90.9%</span>
+      <span class="msc-l">Accuracy</span>
+    </div>
+    <div class="msc">
+      <span class="msc-v gold">86.6%</span>
+      <span class="msc-l">F1 Score</span>
+    </div>
+    <div class="msc">
+      <span class="msc-v purple">70/15/15</span>
+      <span class="msc-l">Train/Val/Test</span>
+    </div>
+  </div>
+
+  <div class="dataset-bar">
+    <strong>SisFall Dataset</strong>
+    <span>19 受試者</span>
+    <span>15 種跌倒動作</span>
+    <span>34 種日常活動</span>
+    <span>200Hz, 6-channel (Acc + Gyro)</span>
+    <span style="margin-left:auto;color:var(--cyan)">Stratified split · 無 data leakage</span>
+  </div>
+  <div class="cue-bar">「不是二值判斷，是後驗機率——讓我們針對場景調整 threshold」</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S3B — DEEP UNFOLDING + XAI
+══════════════════════════════════════════════════════ -->
+<!-- ══ S3B：Deep Unfolding — 設計直覺（為什麼） ══ -->
+<section class="slide" id="s3b">
+  <div>
+    <span class="act-label">第三幕 · 技術創新 · Deep Unfolding</span>
+    <h2 class="sec-title">為什麼 <span class="accent">Deep Unfolding</span>？</h2>
+  </div>
+
+  <!-- 痛點 vs 解法 對比卡 -->
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="flex:1;min-width:260px;background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:16px">
+      <div style="font-size:11px;color:var(--orange);letter-spacing:1px;margin-bottom:10px">❌ 1D-CNN 的問題</div>
+      <div style="font-size:13px;color:var(--text);line-height:2">
+        架構是<strong style="color:var(--orange)">人工拍板</strong>：幾層？幾個 filter？為什麼 k=7？<br>
+        特徵 z 是<strong style="color:var(--orange)">黑盒</strong>：學到什麼不知道<br>
+        可解釋性只能靠 Grad-CAM <em>事後補救</em>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--cyan);min-width:36px">→</div>
+    <div style="flex:1;min-width:260px;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:10px;padding:16px">
+      <div style="font-size:11px;color:var(--cyan);letter-spacing:1px;margin-bottom:10px">✓ Deep Unfolding 的設計直覺</div>
+      <div style="font-size:13px;color:var(--text);line-height:2">
+        架構從<strong style="color:var(--cyan)">數學推導而來</strong>：把解稀疏優化的迭代展開<br>
+        每一層 = <strong style="color:var(--cyan)">一次 ISTA 更新步</strong>，不是憑感覺堆<br>
+        可解釋性是<strong style="color:var(--cyan)">設計本身的一部份</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 公式對應：算法迭代 ≡ 網路層 -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin-bottom:16px">
+    <div style="flex:1;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:8px">ISTA 迭代式（解 min ½‖x−Dz‖²+λ‖z‖₁）</div>
+      <div style="font-family:monospace;font-size:14px;color:var(--text);line-height:2">
+        zᵏ⁺¹ = soft<span class="accent">λ</span>( <span style="color:var(--gold)">W₁</span>·x + <span style="color:var(--gold)">W₂</span>·zᵏ )<br>
+        <span style="font-size:11px;color:var(--dim)">每次迭代：往稀疏解方向靠近一步</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;min-width:60px">
+      <span style="font-size:26px;color:var(--cyan)">≡</span>
+      <span style="font-size:10px;color:var(--dim);text-align:center">迭代步 k<br>⇄<br>網路層 ℓ</span>
+    </div>
+    <div style="flex:1;min-width:280px;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--cyan);margin-bottom:8px">展開為神經網路（LISTA，K=4 層）</div>
+      <div style="font-family:monospace;font-size:14px;color:var(--text);line-height:2">
+        zᵏ⁺¹ = soft<span class="accent">θₖ</span>( <span style="color:var(--cyan)">Wₑ</span>·x + <span style="color:var(--cyan)">Sₖ</span>·zᵏ )<br>
+        <span style="font-size:11px;color:var(--cyan)">W₁→Wₑ · W₂→Sₖ · λ→θₖ 全部可學習</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 關鍵訊息 bar -->
+  <div class="dataset-bar">
+    <strong style="color:var(--cyan)">設計直覺一句話</strong>
+    <span>把「解稀疏問題的迭代算法」<strong style="color:var(--text)">展開</strong>成固定層數的神經網路</span>
+    <span>參數 <span style="color:var(--cyan)">Wₑ / Sₖ / θₖ</span> 由資料學習，但每層的<strong style="color:var(--text)">角色</strong>由數學決定</span>
+    <span style="margin-left:auto;color:var(--green)">架構不是拍腦袋 · 是從問題結構推導出來的</span>
+  </div>
+  <div class="cue-bar">
+    📢 <strong>講稿：</strong>「同樣在疊層，但 1D-CNN 的架構是拍腦袋——我不知道為什麼是兩層 Conv、為什麼 k=7。
+    Deep Unfolding 的思路是：我有一個稀疏優化問題，解它的迭代算法叫 ISTA，把這個算法展開成固定 K 步，每一步就是一層網路。架構是從數學推出來的。」
+  </div>
+</section>
+
+<!-- ══ S3C：Deep Unfolding — 帶來的提升（是什麼） ══ -->
+<section class="slide" id="s3c">
+  <div>
+    <span class="act-label">第三幕 · 技術創新 · Deep Unfolding 優勢</span>
+    <h2 class="sec-title">Deep Unfolding 帶來的<span class="accent">三大提升</span></h2>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid rgba(0,230,118,.4);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--green);letter-spacing:1px">① Accuracy +2.3%</div>
+      <div style="font-size:32px;font-weight:700;color:var(--green)">93.22%</div>
+      <div style="font-size:11px;color:var(--dim)">vs baseline 90.9%</div>
+      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">DU 稀疏模組精煉 CNN 特徵，<strong style="color:var(--green)">減少雜訊干擾</strong></div>
+    </div>
+    <div style="flex:1;min-width:180px;background:var(--bg2);border:2px solid rgba(255,59,48,.5);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--red);letter-spacing:1px">② Recall +6.2% ← 最關鍵</div>
+      <div style="font-size:32px;font-weight:700;color:var(--red)">93.17%</div>
+      <div style="font-size:11px;color:var(--dim)">vs baseline 87.0%</div>
+      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">每 100 次跌倒<strong style="color:var(--red)">少漏報 6 次</strong>，稀疏特徵保留跌倒動作關鍵點</div>
+    </div>
+    <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid rgba(255,208,96,.35);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--gold);letter-spacing:1px">③ F1 +3.7%</div>
+      <div style="font-size:32px;font-weight:700;color:var(--gold)">90.29%</div>
+      <div style="font-size:11px;color:var(--dim)">vs baseline 86.62%</div>
+      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">精度與召回率<strong style="color:var(--gold)">同步提升</strong>，不是犧牲一方換另一方</div>
+    </div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;font-size:12px">
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;background:var(--bg3);padding:8px 0">
+      <div style="color:var(--dim)">指標</div>
+      <div style="color:var(--dim)">1D-CNN<br><span style="font-size:10px">baseline</span></div>
+      <div style="color:var(--dim)">LISTA<br><span style="font-size:10px">純 Deep Unfolding</span></div>
+      <div style="color:var(--cyan);font-weight:700">FallHybridDU ★<br><span style="font-size:10px">CNN + DU 嵌入</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim)">Accuracy</div><div style="padding:9px">90.9%</div><div style="padding:9px">90.90%</div><div style="padding:9px;color:var(--green);font-weight:700">93.22% ↑</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--red)">Recall</div><div style="padding:9px">87.0%</div><div style="padding:9px">86.3%</div><div style="padding:9px;color:var(--red);font-weight:700">93.17% ↑↑</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim)">F1 Score</div><div style="padding:9px">86.62%</div><div style="padding:9px">86.53%</div><div style="padding:9px;color:var(--gold);font-weight:700">90.29% ↑</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim)">模型大小</div><div style="padding:9px">846 KB</div><div style="padding:9px;color:var(--cyan)">274 KB ↓</div><div style="padding:9px;color:var(--cyan)">709 KB</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim)">參數量</div><div style="padding:9px">~217K</div><div style="padding:9px;color:var(--cyan)">88.9K ↓</div><div style="padding:9px">180K</div>
+    </div>
+  </div>
+  <div class="dataset-bar">
+    <strong style="color:var(--red)">Recall 是跌倒偵測最關鍵的指標</strong>
+    <span>漏報 = 跌倒沒被發現 = 生命危險</span>
+    <span>FallHybridDU：Recall 93.17%，每 100 次跌倒少漏報 6 次</span>
+    <span style="margin-left:auto;color:var(--green)">CNN + DU 嵌入模組 · 準確率真正提升 · 手機端側部署</span>
+  </div>
+  <div class="cue-bar">
+    講稿：「這次不是『同精度但更小』——是真正的提升。FallHybridDU 準確率 93.2%，比 baseline 高了 2.3%。
+    但更重要的是 Recall：87% 提升到 93.2%，意思是每 100 次真實跌倒，這個模型多救了 6 個。
+    為什麼？DU 模組在 CNN 特徵之上做稀疏精煉，把不相關的雜訊濾掉，讓後端的 CNN 更容易判斷。
+    這才是『演算法優化讓模型更好』的真正意思。」
+  </div>
+</section>
+<section class="slide" id="s4">
+  <div>
+    <span class="act-label">核心數據 · Benchmark</span>
+    <h2 class="sec-title">推論速度<span class="accent">對比</span></h2>
+  </div>
+
+  <div class="bench-hero">
+    <span class="bh-num">0.17<span style="font-size:.45em;font-weight:300;color:var(--dim)"> ms</span></span>
+    <span class="bh-sub">比眨眼快 <strong class="green">2,000 倍</strong> &nbsp;·&nbsp; 單筆推論中位數（500 次取樣）</span>
+  </div>
+
+  <div class="chart" id="bench-chart">
+    <div class="bar-row">
+      <span class="bar-name dim-c">PyTorch CPU</span>
+      <div class="bar-track"><div class="bar-fill b-cpu" data-w="100"></div></div>
+      <span class="bar-ms dim-c">0.659 ms &nbsp;(1×)</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-name">PyTorch GPU</span>
+      <div class="bar-track"><div class="bar-fill b-pgpu" data-w="66.8"></div></div>
+      <span class="bar-ms">0.440 ms &nbsp;(1.5×)</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-name" style="color:var(--green);font-weight:700">ONNX CUDA ★</span>
+      <div class="bar-track"><div class="bar-fill b-onnx" data-w="25.6"></div></div>
+      <span class="bar-ms hi">0.169 ms &nbsp;(3.9×)</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-name dim-c">ONNX TRT-FP16</span>
+      <div class="bar-track"><div class="bar-fill b-trt" data-w="27.6"></div></div>
+      <span class="bar-ms dim-c">0.182 ms &nbsp;(3.6×)</span>
+    </div>
+  </div>
+
+  <div class="bench-note">
+    <span>測試環境：單筆推論 · ONNX Runtime CUDA EP · 500次中位數</span>
+    <span>·</span>
+    <span>模型：846 KB ONNX（浮點 FP32）</span>
+    <span>·</span>
+    <span>TRT warm-up 已排除</span>
+  </div>
+  <div class="cue-bar">「這不是 batch 推論的數字——是真實單筆、邊緣場景的數字」</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S4B — DEMO 橋段（場景說明，demo 前的鋪墊）
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s4b">
+  <div>
+    <span class="act-label">第四幕 · Demo 前說明</span>
+    <h2 class="sec-title">接下來你將看到<span class="accent">什麼</span></h2>
+  </div>
+
+  <!-- 故事場景 -->
+  <div style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.25);border-radius:12px;padding:20px 24px;margin-bottom:18px">
+    <div style="font-size:11px;color:var(--orange);letter-spacing:1.5px;margin-bottom:10px">📍 場景</div>
+    <div style="font-size:16px;color:var(--text);line-height:1.9">
+      一位獨居老人，起身時突然失去重心，<strong style="color:var(--orange)">跌落在地</strong>。<br>
+      口袋裡的手機，在他倒下的<strong style="color:var(--text)"> 0.5 秒內</strong>，偵測到了這件事——<br>
+      <strong style="color:var(--cyan)">不靠網路，不靠任何額外裝置。</strong>
+    </div>
+  </div>
+
+  <!-- Demo 流程時序 -->
+  <div style="display:flex;align-items:stretch;gap:0;margin-bottom:18px">
+
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px 0 0 10px;padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">🚶</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text)">正常行走</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">機率 &lt; 5%</div>
+      <div style="margin-top:8px;height:4px;background:var(--green);border-radius:2px;width:30%;margin-left:auto;margin-right:auto"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;padding:0 6px;color:var(--dim);font-size:18px">→</div>
+
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">⚠️</div>
+      <div style="font-size:12px;font-weight:700;color:var(--gold)">失去重心</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">機率快速攀升</div>
+      <div style="margin-top:8px;height:4px;background:var(--gold);border-radius:2px;width:60%;margin-left:auto;margin-right:auto"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;padding:0 6px;color:var(--dim);font-size:18px">→</div>
+
+    <div style="flex:1;background:rgba(255,59,48,.08);border:1px solid rgba(255,59,48,.4);padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">💥</div>
+      <div style="font-size:12px;font-weight:700;color:var(--red)">撞地瞬間</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">機率 &gt; 90%</div>
+      <div style="margin-top:8px;height:4px;background:var(--red);border-radius:2px;width:95%;margin-left:auto;margin-right:auto"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;padding:0 6px;color:var(--dim);font-size:18px">→</div>
+
+    <div style="flex:1;background:rgba(255,59,48,.15);border:2px solid var(--red);border-radius:0 10px 10px 0;padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">🚨</div>
+      <div style="font-size:12px;font-weight:700;color:var(--red)">警報觸發</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">警笛 + 撥號</div>
+      <div style="margin-top:8px;height:4px;background:var(--red);border-radius:2px;width:100%;margin-left:auto;margin-right:auto;animation:pulse-bar 1s infinite"></div>
+    </div>
+  </div>
+
+  <!-- 看什麼 -->
+  <div style="display:flex;gap:12px">
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
+      <div style="font-size:11px;color:var(--cyan);margin-bottom:6px;letter-spacing:1px">👁 觀察重點</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.8">
+        ① 右上角<strong style="color:var(--cyan)">機率數字</strong>從 0% 開始爬升<br>
+        ② 倒下瞬間機率<strong style="color:var(--red)">衝過 50%</strong><br>
+        ③ 全螢幕紅色警報 + <strong style="color:var(--text)">手機警笛聲</strong>響起
+      </div>
+    </div>
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
+      <div style="font-size:11px;color:var(--green);margin-bottom:6px;letter-spacing:1px">⚡ 關鍵數字</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.8">
+        推論延遲 <strong style="color:var(--green)">0.34ms</strong>（手機 CPU 約 5ms）<br>
+        從跌倒到警報 <strong style="color:var(--green)">＜ 0.5 秒</strong><br>
+        完全離線，<strong style="color:var(--cyan)">0 網路需求</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="cue-bar">
+    📢 <strong>講稿：</strong>「我來示範一個場景——有人跌倒了。注意看右上角的機率數字，從接近零開始，隨著動作加劇往上爬。
+    當他撞到地板那一刻，機率衝過門檻，系統立刻觸發警報。這整個過程，發生在手機上，離線，0.5 秒以內。」
+  </div>
+</section>
+
+<style>
+@keyframes pulse-bar { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+
+<!-- ══════════════════════════════════════════════════════
+     S5 — DEMO ARCHITECTURE
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s5">
+  <div>
+    <span class="act-label">第四幕 · Demo 說明 · 5:00–6:45</span>
+    <h2 class="sec-title">即時偵測<span class="accent">系統架構</span></h2>
+  </div>
+
+  <div class="demo-grid">
+    <!-- 訓練階段（電腦，一次性，部署後即不需要）-->
+    <div class="dev-card">
+      <span class="dev-ico">💻</span>
+      <span class="dev-name">筆電 GPU · 訓練階段</span>
+      <div class="dev-role">
+        <strong style="color:var(--dim)">離線訓練（一次性）</strong><br>
+        SisFall → 1D-CNN 訓練<br>
+        匯出 709KB ONNX 模型<br>
+        <span style="font-size:12px">部署到手機後即不需要</span>
+      </div>
+    </div>
+
+    <!-- Arrow：訓練完成後「一次性部署」，非即時串流 -->
+    <div class="arr-col">
+      <div class="arr-line"></div>
+      <span class="arr-txt">訓練完成<br>一次性部署</span>
+    </div>
+
+    <!-- 端側運行（手機一條龍，主角）-->
+    <div class="dev-card glow">
+      <span class="dev-ico">📱</span>
+      <span class="dev-name green">Android 手機 · 端側一條龍</span>
+      <div class="dev-role">
+        <strong style="color:var(--cyan)">感測器 → 推論 → 警報</strong><br>
+        200Hz IMU（加速度計＋陀螺儀）<br>
+        1D-CNN @ ONNX Runtime（手機 CPU）<br>
+        跌倒 → 警笛 ＋ 震動 ＋ 自動撥號<br>
+        <span style="font-size:12px;color:var(--green)">完全離線 · 0 雲端 · 0 額外硬體</span>
+      </div>
+      <div class="alarm-pill">🚨 FALL DETECTED</div>
+    </div>
+  </div>
+
+  <div class="demo-modes">
+    <div class="dm-card">
+      <strong>端側部署 Demo（手機 APK／網頁）</strong>
+      手機端 ONNX 直接推論 · 跌倒警笛 ＋ 自動撥號 · 完全離線 — 這才是實際部署形態
+    </div>
+    <div class="dm-card">
+      <strong>桌面視覺化儀表板（demo_sim.py）</strong>
+      SisFall 重播 · NVIDIA Warp 粒子 · Grad-CAM 注意力 — 僅供展示放大視覺化，非部署所需
+    </div>
+  </div>
+  <div class="cue-bar">說明完架構後切到實際 demo 視窗 — 結束後回此頁再轉下一幕</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S6 — NO HARDWARE
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s6">
+  <div>
+    <span class="act-label">第五幕 · 核心主張 · 6:45–8:00</span>
+    <h2 class="sec-title">消滅<span class="accent">專用硬體</span></h2>
+  </div>
+
+  <div class="nohw-grid">
+    <!-- Others -->
+    <div class="hw-card">
+      <span class="hw-title" style="color:var(--orange)">競品思路</span>
+      <ul class="hw-list">
+        <li><span class="i">🖥</span> Jetson Nano / Orin</li>
+        <li><span class="i">🔌</span> Raspberry Pi CM4</li>
+        <li><span class="i">💾</span> 客製化 MCU</li>
+        <li><span class="i">📦</span> 整合、焊接、驅動程式</li>
+        <li><span class="i">💰</span> 額外採購 + 維護成本</li>
+      </ul>
+      <div class="hw-bottom" style="font-size:13px;color:var(--dim);margin-top:14px">
+        目標：<em>「把專用硬體做更小更省電」</em>
+      </div>
+    </div>
+
+    <div class="vs-col">VS</div>
+
+    <!-- Us -->
+    <div class="hw-card ours">
+      <span class="hw-title green">我們的主張</span>
+      <ul class="hw-list">
+        <li><span class="i">📱</span> <span style="color:var(--text)">手機（已有 CPU / GPU / NPU）</span></li>
+        <li><span class="i">🤖</span> <span style="color:var(--text)">機器人（已有運算模組）</span></li>
+        <li><span class="i">⌚</span> <span style="color:var(--text)">穿戴裝置（已有感測器）</span></li>
+        <li><span class="i">✅</span> ONNX Runtime Android SDK</li>
+        <li><span class="i">✅</span> 零額外採購</li>
+      </ul>
+      <div class="hw-bottom">
+        <div class="size-badge">709 KB</div>
+        <div style="font-size:13px;color:var(--dim);margin-top:10px">
+          主張：<em style="color:var(--green)">「消滅專用硬體需求」</em>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nohw-headline" id="nohw-hl">
+    你的口袋裡，已經有了一台跌倒偵測機。
+  </div>
+  <div class="cue-bar">按空白鍵顯示結語 · 下一張是佛偈</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S7 — BUDDHIST QUOTE
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s7">
+  <div style="position:absolute;top:32px;left:80px">
+    <div class="tag" style="border-color:var(--gold);color:var(--gold)">哲學境界 · 8:00–9:00</div>
+  </div>
+
+  <div class="buddha-row">
+    <div class="monk-box shexiu">
+      <span class="monk-name">神秀 — 競品思路</span>
+      <div class="poem">
+        身是菩提樹<br>
+        心如明鏡臺<br>
+        時時勤拂拭<br>
+        勿使惹塵埃
+      </div>
+      <div class="monk-sub">優化、打磨硬體 → 還是要有硬體</div>
+    </div>
+
+    <div class="vs-col-b">vs</div>
+
+    <div class="monk-box huineng">
+      <span class="monk-name" style="font-weight:700">慧能 — 我們的主張</span>
+      <div class="poem">
+        菩提本無樹<br>
+        明鏡亦非臺<br>
+        本是無一物<br>
+        何處惹塵埃
+      </div>
+      <div class="monk-sub" style="color:var(--gold)">硬體本無需，何處買裝置</div>
+    </div>
+  </div>
+
+  <div class="punchline" id="punchline">
+    我們連硬體都不需要。
+    <span class="sub">不是沒有硬體——是不需要額外購置任何硬體<br>你的手機 · 機器人 · 穿戴裝置，已經夠了</span>
+  </div>
+
+  <div class="space-hint" id="space-hint">
+    <span class="kbd">Space</span> 顯示結語
+  </div>
+  <div class="cue-bar">念完偈子後按空白鍵 — 讓結語在評審眼前浮現</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S8 — CLOSING
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s8">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+    <div class="cl-wrap">
+      <span class="cl-line" id="cl1" style="transition-delay:.1s">那個在地板上的人，</span>
+      <span class="cl-line" id="cl2" style="transition-delay:.5s">不需要等雲端，</span>
+      <span class="cl-line" id="cl3" style="transition-delay:.9s">不需要等專用裝置。</span>
+      <span class="cl-line em" id="cl4" style="transition-delay:1.5s">
+        「他的口袋裡，已經有答案了。」
+      </span>
+    </div>
+
+    <div class="final-row" id="final-row">
+      <div class="fr-item">
+        <span class="fr-v accent">0.34ms</span>
+        <span class="fr-l">Inference</span>
+      </div>
+      <div class="fr-item">
+        <span class="fr-v green">93.2%</span>
+        <span class="fr-l">Accuracy</span>
+      </div>
+      <div class="fr-item">
+        <span class="fr-v gold">709 KB</span>
+        <span class="fr-l">Model Size</span>
+      </div>
+      <div class="fr-item">
+        <span class="fr-v purple">0</span>
+        <span class="fr-l">額外硬體</span>
+      </div>
+    </div>
+  </div>
+  <div class="cue-bar">最後一句放最慢 · 停頓兩秒後說「謝謝」</div>
+</section>
+
+</div><!-- #deck -->
+
+<script>
+/* ══════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════ */
+const SLIDES = Array.from(document.querySelectorAll('.slide'));
+const N = SLIDES.length;
+let cur = 0;
+let punchShown = false;
+let noHwShown  = false;
+let closingRan = false;
+let barsRan    = false;
+
+/* ══════════════════════════════════════════════════════
+   DOTS
+══════════════════════════════════════════════════════ */
+const dotsEl = document.getElementById('hud-dots');
+SLIDES.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' cur' : '');
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+});
+function updateDots(n) {
+  dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('cur', i === n));
+}
+
+/* ══════════════════════════════════════════════════════
+   SLIDE SWITCH
+══════════════════════════════════════════════════════ */
+function goTo(n) {
+  if (n < 0 || n >= N || n === cur) return;
+  SLIDES[cur].classList.remove('active');
+  cur = n;
+  SLIDES[cur].classList.add('active');
+  document.getElementById('hud-num').textContent = `${cur + 1} / ${N}`;
+  document.getElementById('hud-fill').style.width = `${(cur + 1) / N * 100}%`;
+  updateDots(cur);
+  onEnter(cur);
+}
+function nav(d) { goTo(cur + d); }
+
+/* ══════════════════════════════════════════════════════
+   PER-SLIDE ENTRY HOOKS
+══════════════════════════════════════════════════════ */
+function onEnter(n) {
+  if (n === 0) runCounters();
+  if (n === 3) runBars();
+  if (n === 5) { noHwShown = false; }
+  if (n === 6) {
+    punchShown = false;
+    document.getElementById('punchline').classList.remove('show');
+    document.getElementById('space-hint').classList.remove('hidden');
+  }
+  if (n === 7) runClosing();
+}
+
+/* ══════════════════════════════════════════════════════
+   COUNTER ANIMATION (slide 1)
+══════════════════════════════════════════════════════ */
+function runCounters() {
+  document.querySelectorAll('[data-cnt]').forEach(el => {
+    const target = parseFloat(el.dataset.cnt);
+    const dp     = parseInt(el.dataset.dp || '0');
+    const dur    = 1800;
+    let t0 = null;
+    (function tick(ts) {
+      if (!t0) t0 = ts;
+      const p = Math.min((ts - t0) / dur, 1);
+      const e = p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p+2,3)/2;
+      el.textContent = (target * e).toFixed(dp);
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = target.toFixed(dp);
+    })(performance.now());
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   BAR CHART ANIMATION (slide 4)
+══════════════════════════════════════════════════════ */
+function runBars() {
+  if (barsRan) return;
+  barsRan = true;
+  document.querySelectorAll('.bar-fill[data-w]').forEach((b, i) => {
+    b.style.width = '0';
+    setTimeout(() => { b.style.width = b.dataset.w + '%'; }, 250 + i * 180);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   CLOSING ANIMATION (slide 8)
+══════════════════════════════════════════════════════ */
+function runClosing() {
+  closingRan = false;
+  ['cl1','cl2','cl3','cl4'].forEach(id => document.getElementById(id).classList.remove('show'));
+  document.getElementById('final-row').classList.remove('show');
+  const seq = [['cl1',200],['cl2',600],['cl3',1000],['cl4',1600],['final-row',2400]];
+  seq.forEach(([id, ms]) => setTimeout(() => document.getElementById(id).classList.add('show'), ms));
+}
+
+/* ══════════════════════════════════════════════════════
+   KEYBOARD
+══════════════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  const fwd = e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter';
+  const bwd = e.key === 'ArrowLeft'  || e.key === 'ArrowUp';
+
+  if (fwd) {
+    e.preventDefault();
+    // Slide 6 (index 5): space shows headline first
+    if (cur === 5 && !noHwShown) {
+      document.getElementById('nohw-hl').classList.add('show');
+      noHwShown = true;
+      return;
+    }
+    // Slide 7 (index 6): space shows punchline first
+    if (cur === 6 && !punchShown) {
+      document.getElementById('punchline').classList.add('show');
+      document.getElementById('space-hint').classList.add('hidden');
+      punchShown = true;
+      return;
+    }
+    nav(1);
+    return;
+  }
+  if (bwd) { e.preventDefault(); nav(-1); return; }
+
+  // Number keys 1–8
+  const n = parseInt(e.key);
+  if (n >= 1 && n <= N) goTo(n - 1);
+});
+
+/* ══════════════════════════════════════════════════════
+   TOUCH SWIPE
+══════════════════════════════════════════════════════ */
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 48) nav(dx < 0 ? 1 : -1);
+});
+
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+runCounters();
+</script>
+</body>
+</html>

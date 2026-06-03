@@ -100,6 +100,18 @@ main{display:flex;flex-direction:column;align-items:center;padding:20px 18px;gap
   background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
   color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;
 }
+.readout{
+  width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-family:monospace;
+}
+.readout-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.readout-k{color:var(--dim);width:32px;flex-shrink:0;letter-spacing:1px}
+.readout-v{color:var(--text);white-space:nowrap}
+.readout-v.hot{color:var(--red);font-weight:700}
+.ov-stats{
+  font-size:13px;color:rgba(255,255,255,.92);line-height:1.8;margin-top:6px;
+  font-family:monospace;text-align:center;
+}
 </style>
 </head>
 <body>
@@ -152,6 +164,13 @@ main{display:flex;flex-direction:column;align-items:center;padding:20px 18px;gap
     <div class="stat"><span class="stat-v" id="st-max">0%</span><span class="stat-l">最高機率</span></div>
   </div>
 
+  <!-- 即時感測器數值 -->
+  <div class="readout">
+    <div class="readout-row"><span class="readout-k">ACC</span><span class="readout-v" id="rd-acc">x +0.00  y +0.00  z +0.00  m/s²</span></div>
+    <div class="readout-row"><span class="readout-k">GYR</span><span class="readout-v" id="rd-gyro">x +0.00  y +0.00  z +0.00  °/s</span></div>
+    <div class="readout-row"><span class="readout-k">|a|</span><span class="readout-v" id="rd-svm">1.00 g</span></div>
+  </div>
+
   <!-- LIVE panel -->
   <div id="live-panel" style="display:none;width:100%;display:flex;flex-direction:column;gap:12px">
     <div class="info-box info-warn">
@@ -188,6 +207,7 @@ main{display:flex;flex-direction:column;align-items:center;padding:20px 18px;gap
   <div class="ov-title">FALL DETECTED</div>
   <div class="ov-sub">跌倒偵測警報觸發</div>
   <div class="ov-prob" id="ov-prob">—%</div>
+  <div class="ov-stats" id="ov-stats"></div>
   <button class="ov-reset" onclick="resetAll()">⟳ 重置</button>
 </div>
 
@@ -211,6 +231,8 @@ let session = null;
 let mode = 'demo';
 let liveOn = false;
 let winCount = 0, maxProb = 0;
+// 峰值合力(g) / 反應時間（機率破 30% → 破 50%）
+let peakG = 0, anomalyT = 0, reactionMs = 0, anomalyArmed = false;
 
 const BUF = 200, NCH = 6, STRIDE = 100;
 const buf = Array.from({length: NCH}, () => new Float32Array(BUF));
@@ -227,12 +249,12 @@ async function loadModel() {
   setStatus('loading', '載入模型中...');
   try {
     ort.env.wasm.numThreads = 1;
-    session = await ort.InferenceSession.create('./models/best_1dcnn.onnx', {
+    session = await ort.InferenceSession.create('./models/best_du.onnx', {
       executionProviders: ['wasm'],
       graphOptimizationLevel: 'all',
     });
     setStatus('ready', '模型就緒 ✓');
-    log('✓ 模型載入：best_1dcnn.onnx (866 KB)', 'ok');
+    log('✓ 模型載入：best_du.onnx (709 KB · FallHybridDU · 93.2%)', 'ok');
     log('✓ 推論後端：ONNX Runtime Web (WASM)', 'ok');
     document.querySelectorAll('.btn.disabled').forEach(b => b.classList.remove('disabled'));
   } catch(e) {
@@ -336,10 +358,25 @@ function stopLive() {
 function onMotion(e) {
   const a = e.accelerationIncludingGravity, r = e.rotationRate;
   if (!a) { log('⚠ 無加速度計', 'fall'); return; }
+  const ax=a.x||0, ay=a.y||0, az=a.z||0;
+  const gx=r?(r.alpha||0):0, gy=r?(r.beta||0):0, gz=r?(r.gamma||0):0;
+  showReadout(ax, ay, az, gx, gy, gz);   // 真實物理單位即時數值
   addSample([
-    (a.x||0)*ADXL_SCALE, (a.y||0)*ADXL_SCALE, (a.z||0)*ADXL_SCALE,
-    r?(r.alpha||0)*ITG_SCALE:0, r?(r.beta||0)*ITG_SCALE:0, r?(r.gamma||0)*ITG_SCALE:0
+    ax*ADXL_SCALE, ay*ADXL_SCALE, az*ADXL_SCALE,
+    gx*ITG_SCALE, gy*ITG_SCALE, gz*ITG_SCALE
   ]);
+}
+
+/* 即時 6 軸數值（物理單位）+ 合力 |a|(g)，並追蹤峰值 */
+function showReadout(ax, ay, az, gx, gy, gz) {
+  const fmt = v => (v>=0?'+':'') + v.toFixed(2);
+  document.getElementById('rd-acc').textContent  = `x ${fmt(ax)}  y ${fmt(ay)}  z ${fmt(az)}  m/s²`;
+  document.getElementById('rd-gyro').textContent = `x ${fmt(gx)}  y ${fmt(gy)}  z ${fmt(gz)}  °/s`;
+  const g = Math.sqrt(ax*ax + ay*ay + az*az) / 9.81;
+  const sv = document.getElementById('rd-svm');
+  sv.textContent = g.toFixed(2) + ' g';
+  sv.classList.toggle('hot', g > 1.8 || g < 0.4);   // 撞擊或自由落體醒目標示
+  if (g > peakG) peakG = g;
 }
 
 /* ─── Demo playback ─── */
@@ -385,6 +422,8 @@ function updateUI(p, doAlert=true) {
     maxProb = p;
     document.getElementById('st-max').textContent = Math.round(maxProb*100) + '%';
   }
+  // 反應時間：機率首次破 30% 記為「異常起點」
+  if (p > 0.3 && !anomalyArmed) { anomalyArmed = true; anomalyT = performance.now(); }
   if (doAlert && p > 0.5) showAlert(pct);
 }
 
@@ -394,12 +433,17 @@ function resetProb() {
   pe.textContent = '0%'; pe.style.fill = '#dce8f4';
   document.getElementById('prob-fill').style.width = '0%';
   winCount = 0; maxProb = 0;
+  peakG = 0; anomalyArmed = false; anomalyT = 0; reactionMs = 0;
   document.getElementById('st-win').textContent = '0';
   document.getElementById('st-max').textContent = '0%';
+  const ovs = document.getElementById('ov-stats'); if (ovs) ovs.textContent = '';
 }
 
 function showAlert(pct) {
   document.getElementById('ov-prob').textContent = pct + '%';
+  reactionMs = anomalyArmed ? (performance.now() - anomalyT) : 0;
+  document.getElementById('ov-stats').textContent =
+    `峰值 ${peakG.toFixed(2)} g · 機率 ${pct}% · 反應 ${reactionMs.toFixed(0)} ms`;
   document.getElementById('fall-overlay').classList.add('show');
 }
 
@@ -442,6 +486,22 @@ function updateSparksFromWin(w) {
       spk[c][(spkPos + i) % SLEN] = w[c*200 + Math.min(i*step, 199)];
   spkPos += SLEN;
   drawSparks();
+
+  // DEMO：把正規化視窗反推回物理單位，顯示即時數值 + 追蹤整窗峰值合力
+  //   bits = z·std + mean；acc: m/s² = bits/256·9.81；gyro: °/s = bits/14.375
+  const tb = (c, t) => w[c*200+t] * NORM_STD[c] + NORM_MEAN[c];
+  let peakWin = 0;
+  for (let t = 0; t < 200; t++) {
+    const ax = tb(0,t)/256*9.81, ay = tb(1,t)/256*9.81, az = tb(2,t)/256*9.81;
+    const g = Math.sqrt(ax*ax+ay*ay+az*az)/9.81;
+    if (g > peakWin) peakWin = g;
+  }
+  const L = 199;
+  showReadout(
+    tb(0,L)/256*9.81, tb(1,L)/256*9.81, tb(2,L)/256*9.81,
+    tb(3,L)/ITG_SCALE, tb(4,L)/ITG_SCALE, tb(5,L)/ITG_SCALE
+  );
+  if (peakWin > peakG) peakG = peakWin;
 }
 
 /* ─── Mode switch ─── */

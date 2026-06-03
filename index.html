@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="FallGuard Edge AI 跌倒偵測系統展示 — 1D-CNN × ONNX Runtime CUDA EP，0.17ms 即時推論，北京大學競賽 2026">
+<meta name="description" content="FallGuard 嵌入式跌倒偵測系統 — 1D-CNN × Embedded Deep Unfolding，93.2% 準確率、0.34ms CPU 推論，台北大學競賽 2026">
 <meta property="og:title" content="FallGuard Edge AI — 跌倒偵測系統">
-<meta property="og:description" content="用口袋裡的設備即時偵測跌倒，無需額外硬體，0.17ms 推論延遲">
+<meta property="og:description" content="用口袋裡的設備即時偵測跌倒，無需額外硬體，0.34ms 推論延遲">
 <meta property="og:type" content="website">
 <meta property="og:image" content="">
 <title>跌倒偵測 Edge AI 系統 — 北大比賽 2026</title>
@@ -1070,10 +1070,12 @@ h2.sec-title {
   <!-- 內容包裝層，z-index 高於 canvas -->
   <div id="s1-content">
     <div class="tag">Edge AI · Fall Detection · 2026</div>
-    <div class="cover-eyebrow">跌倒偵測系統</div>
+    <div class="cover-eyebrow" style="font-size:15px;line-height:1.55;color:var(--text);font-weight:600;letter-spacing:0;text-transform:none;max-width:620px">
+      An Embedded Life Monitoring System<br>Based on 1D Convolutional Neural Networks
+    </div>
     <div class="cover-title">
       Fall<span class="accent">Guard</span><br>
-      <span style="font-weight:300;font-size:.6em;color:var(--dim)">Edge AI on Any Device</span>
+      <span style="font-weight:300;font-size:.6em;color:var(--dim)">Edge AI · 1D-CNN · Deep Unfolding</span>
     </div>
 
     <div class="cover-stack">
@@ -1086,15 +1088,15 @@ h2.sec-title {
 
     <div class="cover-metrics">
       <div class="cm">
-        <span class="cm-val accent" data-cnt="0.17" data-dp="2">0.00</span>
+        <span class="cm-val accent" data-cnt="0.34" data-dp="2">0.00</span>
         <div class="cm-label">ms · Inference</div>
       </div>
       <div class="cm">
-        <span class="cm-val green" data-cnt="90.9" data-dp="1">0.0</span>
+        <span class="cm-val green" data-cnt="93.2" data-dp="1">0.0</span>
         <div class="cm-label">% · Accuracy</div>
       </div>
       <div class="cm">
-        <span class="cm-val gold" data-cnt="846" data-dp="0">0</span>
+        <span class="cm-val gold" data-cnt="709" data-dp="0">0</span>
         <div class="cm-label">KB · Model Size</div>
       </div>
       <div class="cm">
@@ -1107,7 +1109,7 @@ h2.sec-title {
       <span>📅 2026-06-04</span>
       <span>📍 台北</span>
       <span>📊 SisFall · 200Hz · 6-ch IMU</span>
-      <span>🏆 北京大學競賽</span>
+      <span>🏆 台北大學競賽</span>
     </div>
   </div>
   <div class="cue-bar" style="z-index:1;position:relative">上台前確認：demo_sim.py 開啟 · R 鍵重置 · 音效開啟 · 手機連線中</div>
@@ -1239,53 +1241,272 @@ h2.sec-title {
 </section>
 
 <!-- ══════════════════════════════════════════════════════
-     S4 — BENCHMARK
+     S3B — DEEP UNFOLDING + XAI
 ══════════════════════════════════════════════════════ -->
+<section class="slide" id="s3b">
+  <div>
+    <span class="act-label">第三幕 · 技術創新 · Deep Unfolding</span>
+    <h2 class="sec-title">為什麼 <span class="accent">Deep Unfolding</span>？</h2>
+  </div>
+
+  <!-- 痛點 vs 解法 對比卡 -->
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="flex:1;min-width:260px;background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:16px">
+      <div style="font-size:11px;color:var(--orange);letter-spacing:1px;margin-bottom:10px">❌ 1D-CNN 的問題</div>
+      <div style="font-size:13px;color:var(--text);line-height:2">
+        架構是<strong style="color:var(--orange)">人工拍板</strong>：幾層？幾個 filter？為什麼 k=7？<br>
+        特徵 z 是<strong style="color:var(--orange)">黑盒</strong>：學到什麼不知道<br>
+        可解釋性只能靠 Grad-CAM <em>事後補救</em>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--cyan);min-width:36px">→</div>
+    <div style="flex:1;min-width:260px;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:10px;padding:16px">
+      <div style="font-size:11px;color:var(--cyan);letter-spacing:1px;margin-bottom:10px">✓ Deep Unfolding 的設計直覺</div>
+      <div style="font-size:13px;color:var(--text);line-height:2">
+        架構從<strong style="color:var(--cyan)">數學推導而來</strong>：把解稀疏優化的迭代展開<br>
+        每一層 = <strong style="color:var(--cyan)">一次 ISTA 更新步</strong>，不是憑感覺堆<br>
+        可解釋性是<strong style="color:var(--cyan)">設計本身的一部份</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 公式對應：算法迭代 ≡ 網路層 -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin-bottom:16px">
+    <div style="flex:1;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:8px">ISTA 迭代式（解 min ½‖x−Dz‖²+λ‖z‖₁）</div>
+      <div style="font-family:monospace;font-size:14px;color:var(--text);line-height:2">
+        zᵏ⁺¹ = soft<span class="accent">λ</span>( <span style="color:var(--gold)">W₁</span>·x + <span style="color:var(--gold)">W₂</span>·zᵏ )<br>
+        <span style="font-size:11px;color:var(--dim)">每次迭代：往稀疏解方向靠近一步</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;min-width:60px">
+      <span style="font-size:26px;color:var(--cyan)">≡</span>
+      <span style="font-size:10px;color:var(--dim);text-align:center">迭代步 k<br>⇄<br>網路層 ℓ</span>
+    </div>
+    <div style="flex:1;min-width:280px;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--cyan);margin-bottom:8px">展開為神經網路（嵌入 1D-CNN，K=5 層）</div>
+      <div style="font-family:monospace;font-size:14px;color:var(--text);line-height:2">
+        zᵏ⁺¹ = soft<span class="accent">θₖ</span>( <span style="color:var(--cyan)">Wₑ</span>·x + <span style="color:var(--cyan)">Sₖ</span>·zᵏ )<br>
+        <span style="font-size:11px;color:var(--cyan)">W₁→Wₑ · W₂→Sₖ · λ→θₖ 全部可學習</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 關鍵訊息 bar -->
+  <div class="dataset-bar">
+    <strong style="color:var(--cyan)">設計直覺一句話</strong>
+    <span>把「解稀疏問題的迭代算法」<strong style="color:var(--text)">展開</strong>成固定層數的神經網路</span>
+    <span>參數 <span style="color:var(--cyan)">Wₑ / Sₖ / θₖ</span> 由資料學習，但每層的<strong style="color:var(--text)">角色</strong>由數學決定</span>
+    <span style="margin-left:auto;color:var(--green)">架構不是拍腦袋 · 是從問題結構推導出來的</span>
+  </div>
+    <div class="cue-bar">
+    📢 <strong>講稿：</strong>「同樣在疊層，但 1D-CNN 的架構是拍腦袋——我不知道為什麼是兩層 Conv、為什麼 k=7。
+    Deep Unfolding 的思路是：我有一個稀疏優化問題，解它的迭代算法叫 ISTA，把這個算法展開成固定 K 步，每一步就是一層網路。架構是從數學推出來的。」
+  </div>
+</section>
+
+<!-- ══ S3C：Deep Unfolding — 帶來的提升（是什麼） ══ -->
+<section class="slide" id="s3c">
+  <div>
+    <span class="act-label">第三幕 · 技術創新 · Deep Unfolding 優勢</span>
+    <h2 class="sec-title">Deep Unfolding 帶來的<span class="accent">三大提升</span></h2>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid rgba(0,230,118,.4);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--green);letter-spacing:1px">① Accuracy +2.3%</div>
+      <div style="font-size:32px;font-weight:700;color:var(--green)">93.22%</div>
+      <div style="font-size:11px;color:var(--dim)">vs baseline 90.9%</div>
+      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">DU 稀疏模組精煉 CNN 特徵，<strong style="color:var(--green)">減少雜訊干擾</strong></div>
+    </div>
+    <div style="flex:1;min-width:180px;background:var(--bg2);border:2px solid rgba(255,59,48,.5);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--red);letter-spacing:1px">② Recall +6.2% ← 最關鍵</div>
+      <div style="font-size:32px;font-weight:700;color:var(--red)">93.17%</div>
+      <div style="font-size:11px;color:var(--dim)">vs baseline 87.0%</div>
+      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">每 100 次跌倒<strong style="color:var(--red)">少漏報 6 次</strong>，稀疏特徵保留跌倒動作關鍵點</div>
+    </div>
+    <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid rgba(255,208,96,.35);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--gold);letter-spacing:1px">③ F1 +3.7%</div>
+      <div style="font-size:32px;font-weight:700;color:var(--gold)">90.29%</div>
+      <div style="font-size:11px;color:var(--dim)">vs baseline 86.62%</div>
+      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">精度與召回率<strong style="color:var(--gold)">同步提升</strong>，不是犧牲一方換另一方</div>
+    </div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;font-size:12px">
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;background:var(--bg3);padding:8px 0">
+      <div style="color:var(--dim)">指標</div>
+      <div style="color:var(--dim)">1D-CNN<br><span style="font-size:10px">baseline</span></div>
+      <div style="color:var(--dim)">LISTA<br><span style="font-size:10px">純 Deep Unfolding</span></div>
+      <div style="color:var(--cyan);font-weight:700">FallHybridDU ★<br><span style="font-size:10px">CNN + DU 嵌入</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim)">Accuracy</div><div style="padding:9px">90.9%</div><div style="padding:9px">90.90%</div><div style="padding:9px;color:var(--green);font-weight:700">93.22% ↑</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--red)">Recall</div><div style="padding:9px">87.0%</div><div style="padding:9px">86.3%</div><div style="padding:9px;color:var(--red);font-weight:700">93.17% ↑↑</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim)">F1 Score</div><div style="padding:9px">86.62%</div><div style="padding:9px">86.53%</div><div style="padding:9px;color:var(--gold);font-weight:700">90.29% ↑</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim)">模型大小</div><div style="padding:9px">846 KB</div><div style="padding:9px;color:var(--cyan)">274 KB ↓</div><div style="padding:9px;color:var(--cyan)">709 KB</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim)">參數量</div><div style="padding:9px">~217K</div><div style="padding:9px;color:var(--cyan)">88.9K ↓</div><div style="padding:9px">180K</div>
+    </div>
+  </div>
+  <div class="dataset-bar">
+    <strong style="color:var(--red)">Recall 是跌倒偵測最關鍵的指標</strong>
+    <span>漏報 = 跌倒沒被發現 = 生命危險</span>
+    <span>FallHybridDU：Recall 93.17%，每 100 次跌倒少漏報 6 次</span>
+    <span style="margin-left:auto;color:var(--green)">CNN + DU 嵌入模組 · 準確率真正提升 · 手機端側部署</span>
+  </div>
+  <div class="cue-bar">
+    講稿：「這次不是『同精度但更小』——是真正的提升。FallHybridDU 準確率 93.2%，比 baseline 高了 2.3%。
+    但更重要的是 Recall：87% 提升到 93.2%，意思是每 100 次真實跌倒，這個模型多救了 6 個。
+    為什麼？DU 模組在 CNN 特徵之上做稀疏精煉，把不相關的雜訊濾掉，讓後端的 CNN 更容易判斷。
+    這才是『演算法優化讓模型更好』的真正意思。」
+  </div>
+</section>
 <section class="slide" id="s4">
   <div>
-    <span class="act-label">核心數據 · Benchmark</span>
-    <h2 class="sec-title">推論速度<span class="accent">對比</span></h2>
+    <span class="act-label">核心數據 · Model Comparison</span>
+    <h2 class="sec-title">完整模型<span class="accent">效能對比</span></h2>
   </div>
 
   <div class="bench-hero">
-    <span class="bh-num">0.17<span style="font-size:.45em;font-weight:300;color:var(--dim)"> ms</span></span>
-    <span class="bh-sub">比眨眼快 <strong class="green">超過 1,500 倍</strong> &nbsp;·&nbsp; 單筆推論中位數（500 次取樣）</span>
+    <span class="bh-num">93.2<span style="font-size:.45em;font-weight:300;color:var(--dim)"> %</span></span>
+    <span class="bh-sub">Deep Unfolding 在所有方法中 <strong class="green">Accuracy / F1 雙料第一</strong> &nbsp;·&nbsp; SisFall 測試集真實數據</span>
   </div>
 
-  <div class="chart" id="bench-chart">
-    <div class="bar-row">
-      <span class="bar-name dim-c">PyTorch CPU</span>
-      <div class="bar-track"><div class="bar-fill b-cpu" data-w="100"></div></div>
-      <span class="bar-ms dim-c">0.659 ms &nbsp;(1×)</span>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;background:var(--bg3)">
+      <div style="padding:9px;font-size:12px;color:var(--dim);text-align:left;padding-left:16px">Model</div>
+      <div style="padding:9px;font-size:12px;color:var(--dim)">Accuracy</div>
+      <div style="padding:9px;font-size:12px;color:var(--dim)">F1</div>
     </div>
-    <div class="bar-row">
-      <span class="bar-name">PyTorch GPU</span>
-      <div class="bar-track"><div class="bar-fill b-pgpu" data-w="66.8"></div></div>
-      <span class="bar-ms">0.440 ms &nbsp;(1.5×)</span>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">SVM</div>
+      <div style="padding:9px;font-size:13px">79.9%</div>
+      <div style="padding:9px;font-size:13px">67.0%</div>
     </div>
-    <div class="bar-row">
-      <span class="bar-name" style="color:var(--green);font-weight:700">ONNX CUDA ★</span>
-      <div class="bar-track"><div class="bar-fill b-onnx" data-w="25.6"></div></div>
-      <span class="bar-ms hi">0.169 ms &nbsp;(3.9×)</span>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">Random Forest（輕量）</div>
+      <div style="padding:9px;font-size:13px">83.7%</div>
+      <div style="padding:9px;font-size:13px">72.0%</div>
     </div>
-    <div class="bar-row">
-      <span class="bar-name dim-c">ONNX TRT-FP16</span>
-      <div class="bar-track"><div class="bar-fill b-trt" data-w="27.6"></div></div>
-      <span class="bar-ms dim-c">0.182 ms &nbsp;(3.6×)</span>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">XGBoost</div>
+      <div style="padding:9px;font-size:13px">84.7%</div>
+      <div style="padding:9px;font-size:13px">73.0%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">1D-CNN</div>
+      <div style="padding:9px;font-size:13px">90.9%</div>
+      <div style="padding:9px;font-size:13px">86.6%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--cyan);background:rgba(0,212,255,.08)">
+      <div style="padding:9px;font-size:13px;color:var(--cyan);font-weight:700;text-align:left;padding-left:16px">1D-CNN × Deep Unfolding　★</div>
+      <div style="padding:9px;font-size:13px;color:var(--cyan);font-weight:700">93.2%</div>
+      <div style="padding:9px;font-size:13px;color:var(--cyan);font-weight:700">90.3%</div>
     </div>
   </div>
 
   <div class="bench-note">
-    <span>測試環境：單筆推論 · ONNX Runtime CUDA EP · 500次中位數</span>
+    <span>SisFall 測試集 · stratified 70/15/15 · 無 data leakage</span>
     <span>·</span>
-    <span>模型：846 KB ONNX（浮點 FP32）</span>
-    <span>·</span>
-    <span>TRT warm-up 已排除</span>
+    <span>Deep Unfolding：純 CPU <strong style="color:var(--cyan)">0.34ms</strong> · 709KB · 86% 稀疏可解釋</span>
   </div>
-  <div class="cue-bar">「這不是 batch 推論的數字——是真實單筆、邊緣場景的數字」</div>
+  <div class="cue-bar">「跟所有方法比——從傳統 SVM 到深度 1D-CNN——Deep Unfolding 的 Accuracy 和 F1 都是第一」</div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════
+══
+     S4B — DEMO 橋段（場景說明，demo 前的鋪墊）
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s4b">
+  <div>
+    <span class="act-label">第四幕 · Demo 前說明</span>
+    <h2 class="sec-title">接下來你將看到<span class="accent">什麼</span></h2>
+  </div>
+
+  <!-- 故事場景 -->
+  <div style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.25);border-radius:12px;padding:20px 24px;margin-bottom:18px">
+    <div style="font-size:11px;color:var(--orange);letter-spacing:1.5px;margin-bottom:10px">📍 場景</div>
+    <div style="font-size:16px;color:var(--text);line-height:1.9">
+      一位獨居老人，起身時突然失去重心，<strong style="color:var(--orange)">跌落在地</strong>。<br>
+      口袋裡的手機，在他倒下的<strong style="color:var(--text)"> 0.5 秒內</strong>，偵測到了這件事——<br>
+      <strong style="color:var(--cyan)">不靠網路，不靠任何額外裝置。</strong>
+    </div>
+  </div>
+
+  <!-- Demo 流程時序 -->
+  <div style="display:flex;align-items:stretch;gap:0;margin-bottom:18px">
+
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px 0 0 10px;padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">🚶</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text)">正常行走</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">機率 &lt; 5%</div>
+      <div style="margin-top:8px;height:4px;background:var(--green);border-radius:2px;width:30%;margin-left:auto;margin-right:auto"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;padding:0 6px;color:var(--dim);font-size:18px">→</div>
+
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">⚠️</div>
+      <div style="font-size:12px;font-weight:700;color:var(--gold)">失去重心</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">機率快速攀升</div>
+      <div style="margin-top:8px;height:4px;background:var(--gold);border-radius:2px;width:60%;margin-left:auto;margin-right:auto"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;padding:0 6px;color:var(--dim);font-size:18px">→</div>
+
+    <div style="flex:1;background:rgba(255,59,48,.08);border:1px solid rgba(255,59,48,.4);padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">💥</div>
+      <div style="font-size:12px;font-weight:700;color:var(--red)">撞地瞬間</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">機率 &gt; 90%</div>
+      <div style="margin-top:8px;height:4px;background:var(--red);border-radius:2px;width:95%;margin-left:auto;margin-right:auto"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;padding:0 6px;color:var(--dim);font-size:18px">→</div>
+
+    <div style="flex:1;background:rgba(255,59,48,.15);border:2px solid var(--red);border-radius:0 10px 10px 0;padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">🚨</div>
+      <div style="font-size:12px;font-weight:700;color:var(--red)">警報觸發</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">警笛 + 撥號</div>
+      <div style="margin-top:8px;height:4px;background:var(--red);border-radius:2px;width:100%;margin-left:auto;margin-right:auto;animation:pulse-bar 1s infinite"></div>
+    </div>
+  </div>
+
+  <!-- 看什麼 -->
+  <div style="display:flex;gap:12px">
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
+      <div style="font-size:11px;color:var(--cyan);margin-bottom:6px;letter-spacing:1px">👁 觀察重點</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.8">
+        ① 右上角<strong style="color:var(--cyan)">機率數字</strong>從 0% 開始爬升<br>
+        ② 倒下瞬間機率<strong style="color:var(--red)">衝過 50%</strong><br>
+        ③ 全螢幕紅色警報 + <strong style="color:var(--text)">手機警笛聲</strong>響起
+      </div>
+    </div>
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
+      <div style="font-size:11px;color:var(--green);margin-bottom:6px;letter-spacing:1px">⚡ 關鍵數字</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.8">
+        推論延遲 <strong style="color:var(--green)">0.17ms</strong>（手機 CPU 約 5ms）<br>
+        從跌倒到警報 <strong style="color:var(--green)">＜ 0.5 秒</strong><br>
+        完全離線，<strong style="color:var(--cyan)">0 網路需求</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="cue-bar">
+    📢 <strong>講稿：</strong>「我來示範一個場景——有人跌倒了。注意看右上角的機率數字，從接近零開始，隨著動作加劇往上爬。
+    當他撞到地板那一刻，機率衝過門檻，系統立刻觸發警報。這整個過程，發生在手機上，離線，0.5 秒以內。」
+  </div>
+</section>
+
+<style>
+@keyframes pulse-bar { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+
+<!-- ════════════════════════════════════════════════════<!-- ══════════════════════════════════════════════════════
      S5 — DEMO ARCHITECTURE
 ══════════════════════════════════════════════════════ -->
 <section class="slide" id="s5">
@@ -1323,7 +1544,7 @@ h2.sec-title {
           <div class="dev-role">
             <strong style="color:var(--green)">推論節點</strong><br>
             ONNX Runtime CUDA EP<br>
-            0.17ms · Warp Particle FX<br>
+            0.34ms · Warp Particle FX<br>
             <span style="font-size:11px">Grad-CAM 注意力可視化</span>
           </div>
           <div class="alarm-pill">🚨 FALL DETECTED</div>
@@ -1413,7 +1634,7 @@ h2.sec-title {
         <li><span class="i">✅</span> 零額外採購</li>
       </ul>
       <div class="hw-bottom">
-        <div class="size-badge">846 KB</div>
+        <div class="size-badge">709 KB</div>
         <div style="font-size:13px;color:var(--dim);margin-top:10px">
           主張：<em style="color:var(--green)">「消滅專用硬體需求」</em>
         </div>
@@ -1456,7 +1677,7 @@ h2.sec-title {
         <div class="hw3d-dot" style="background:var(--cyan)"></div>
         <div class="hw3d-info">
           <span class="hw3d-name accent">SoC &nbsp;·&nbsp; CPU &nbsp;·&nbsp; GPU &nbsp;·&nbsp; NPU</span>
-          <span class="hw3d-sub" style="color:var(--cyan)">✦ ONNX Runtime 在這裡推論 · 0.17ms</span>
+          <span class="hw3d-sub" style="color:var(--cyan)">✦ ONNX Runtime 在這裡推論 · 0.34ms</span>
         </div>
       </div>
       <div class="hw3d-item hw3d-gold" data-idx="2">
@@ -1470,7 +1691,7 @@ h2.sec-title {
         <div class="hw3d-dot" style="background:#00663a"></div>
         <div class="hw3d-info">
           <span class="hw3d-name">Battery</span>
-          <span class="hw3d-sub">功耗可忽略 · 推論僅 0.17ms</span>
+          <span class="hw3d-sub">功耗可忽略 · 推論僅 0.34ms</span>
         </div>
       </div>
       <div class="hw3d-item" data-idx="4">
@@ -1482,7 +1703,7 @@ h2.sec-title {
       </div>
 
       <div class="hw3d-conclusion">
-        <span class="green" style="font-weight:700">846 KB</span>
+        <span class="green" style="font-weight:700">709 KB</span>
         <span class="dim-c"> model &nbsp;+&nbsp; ONNX Runtime Android SDK &nbsp;+&nbsp; </span>
         <span class="accent" style="font-weight:700">你的手機</span>
         <div style="margin-top:6px;font-size:13px;color:var(--green)">= 完整跌倒偵測系統，零額外採購</div>
@@ -1554,15 +1775,15 @@ h2.sec-title {
 
     <div class="final-row" id="final-row">
       <div class="fr-item">
-        <span class="fr-v accent">0.17ms</span>
+        <span class="fr-v accent">0.34ms</span>
         <span class="fr-l">Inference</span>
       </div>
       <div class="fr-item">
-        <span class="fr-v green">90.9%</span>
+        <span class="fr-v green">93.2%</span>
         <span class="fr-l">Accuracy</span>
       </div>
       <div class="fr-item">
-        <span class="fr-v gold">846 KB</span>
+        <span class="fr-v gold">709 KB</span>
         <span class="fr-l">Model Size</span>
       </div>
       <div class="fr-item">
@@ -1874,25 +2095,25 @@ let feedTime = new Date();
 // 預定義週期資料片段
 const FEED_CYCLE = [
   // 正常段
-  { acc: [0.18, -9.81,  0.42], p: 0.03, ms: 0.17, cls: '' },
+  { acc: [0.18, -9.81,  0.42], p: 0.03, ms: 0.34, cls: '' },
   { acc: [0.21, -9.79,  0.38], p: 0.02, ms: 0.16, cls: '' },
-  { acc: [0.15, -9.82,  0.41], p: 0.03, ms: 0.17, cls: '' },
+  { acc: [0.15, -9.82,  0.41], p: 0.03, ms: 0.34, cls: '' },
   { acc: [0.20, -9.80,  0.39], p: 0.04, ms: 0.18, cls: '' },
   // 輕微異常
-  { acc: [1.22, -8.40,  1.90], p: 0.18, ms: 0.17, cls: '' },
+  { acc: [1.22, -8.40,  1.90], p: 0.18, ms: 0.34, cls: '' },
   { acc: [2.51, -7.20,  3.10], p: 0.31, ms: 0.18, cls: '' },
-  { acc: [4.80, -4.80,  5.40], p: 0.48, ms: 0.17, cls: '' },
+  { acc: [4.80, -4.80,  5.40], p: 0.48, ms: 0.34, cls: '' },
   // 跌倒發生
   { acc: [7.84,  2.31,  8.92], p: 0.71, ms: 0.18, cls: 'warn' },
-  { acc: [9.50,  0.80, 11.20], p: 0.82, ms: 0.17, cls: 'warn' },
-  { acc:[11.20, -1.42, 12.80], p: 0.89, ms: 0.17, cls: 'danger' },
+  { acc: [9.50,  0.80, 11.20], p: 0.82, ms: 0.34, cls: 'warn' },
+  { acc:[11.20, -1.42, 12.80], p: 0.89, ms: 0.34, cls: 'danger' },
   { acc:[12.40, -2.10, 13.50], p: 0.94, ms: 0.18, cls: 'danger' },
   // 警報後靜止
-  { acc: [0.08, -9.83,  0.05], p: 0.91, ms: 0.17, cls: 'danger' },
+  { acc: [0.08, -9.83,  0.05], p: 0.91, ms: 0.34, cls: 'danger' },
   { acc: [0.05, -9.82,  0.04], p: 0.87, ms: 0.16, cls: 'warn' },
-  { acc: [0.06, -9.81,  0.03], p: 0.55, ms: 0.17, cls: '' },
+  { acc: [0.06, -9.81,  0.03], p: 0.55, ms: 0.34, cls: '' },
   { acc: [0.07, -9.81,  0.04], p: 0.12, ms: 0.18, cls: '' },
-  { acc: [0.05, -9.82,  0.03], p: 0.04, ms: 0.17, cls: '' },
+  { acc: [0.05, -9.82,  0.03], p: 0.04, ms: 0.34, cls: '' },
 ];
 
 const MAX_FEED_LINES = 4;
@@ -2326,15 +2547,15 @@ function initHW3D() {
   <rect x="473" y="294" width="8" height="8" fill="#ff8844" rx="1"/>
   <text x="38" y="442" fill="#446688" font-size="11" font-family="monospace">Model Performance</text>
   <rect x="28" y="450" width="142" height="90" rx="8" fill="#060c1e" stroke="#1a2a50" stroke-width="1"/>
-  <text x="99" y="492" fill="#4fc3f7" font-size="26" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">90.9%</text>
+  <text x="99" y="492" fill="#4fc3f7" font-size="26" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">93.2%</text>
   <text x="99" y="514" fill="#335570" font-size="11" font-family="Arial,sans-serif" text-anchor="middle">Accuracy</text>
   <text x="99" y="530" fill="#223344" font-size="10" font-family="monospace" text-anchor="middle">F1: 0.908</text>
   <rect x="185" y="450" width="142" height="90" rx="8" fill="#060e0a" stroke="#1a3520" stroke-width="1"/>
-  <text x="256" y="492" fill="#66ffaa" font-size="26" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">0.17ms</text>
+  <text x="256" y="492" fill="#66ffaa" font-size="26" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">0.34ms</text>
   <text x="256" y="514" fill="#336644" font-size="11" font-family="Arial,sans-serif" text-anchor="middle">Latency</text>
   <text x="256" y="530" fill="#224433" font-size="10" font-family="monospace" text-anchor="middle">NPU 200Hz</text>
   <rect x="342" y="450" width="142" height="90" rx="8" fill="#100806" stroke="#302010" stroke-width="1"/>
-  <text x="413" y="492" fill="#ff9955" font-size="26" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">846KB</text>
+  <text x="413" y="492" fill="#ff9955" font-size="26" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">709KB</text>
   <text x="413" y="514" fill="#553322" font-size="11" font-family="Arial,sans-serif" text-anchor="middle">Model Size</text>
   <text x="413" y="530" fill="#332211" font-size="10" font-family="monospace" text-anchor="middle">ONNX int8</text>
   <text x="38" y="562" fill="#446688" font-size="11" font-family="monospace">Recent Events</text>
@@ -2343,7 +2564,7 @@ function initHW3D() {
   <text x="40" y="618" fill="#2d4060" font-size="11" font-family="monospace">09:41:02  Model loaded: Fall1DCNN</text>
   <text x="40" y="638" fill="#2d4060" font-size="11" font-family="monospace">09:41:02  ONNX Runtime v1.18.0</text>
   <text x="40" y="658" fill="#2d5040" font-size="11" font-family="monospace">09:41:05  IMU stream: 200 Hz active</text>
-  <text x="40" y="678" fill="#2d5040" font-size="11" font-family="monospace">09:41:15  Inference avg: 0.17 ms</text>
+  <text x="40" y="678" fill="#2d5040" font-size="11" font-family="monospace">09:41:15  Inference avg: 0.34 ms</text>
   <text x="40" y="698" fill="#2d5040" font-size="11" font-family="monospace">09:41:30  #1247 ADL Normal</text>
   <text x="40" y="718" fill="#2d5040" font-size="11" font-family="monospace">09:41:35  #1248 ADL Normal</text>
   <text x="40" y="738" fill="#cc2222" font-size="11" font-family="monospace">09:41:45  #1249 FALL DETECTED</text>
@@ -2437,7 +2658,7 @@ function initHW3D() {
     <rect x="346" y="444" width="40" height="34" rx="2"/><rect x="394" y="444" width="40" height="34" rx="2"/>
   </g>
   <text x="256" y="502" fill="#b060ff" font-size="17" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">16-Core Neural Engine</text>
-  <text x="256" y="522" fill="#602080" font-size="11" font-family="monospace" text-anchor="middle">35 TOPS  ·  FallGuard: 0.17ms / window</text>
+  <text x="256" y="522" fill="#602080" font-size="11" font-family="monospace" text-anchor="middle">35 TOPS  ·  FallGuard: 0.34ms / window</text>
   <rect x="48" y="562" width="200" height="130" rx="4" fill="#0a1e08" stroke="#30a020" stroke-width="1.5"/>
   <g fill="#0e2c0a" stroke="#258020" stroke-width="0.8">
     <rect x="58" y="572" width="82" height="18" rx="1"/><rect x="58" y="596" width="82" height="18" rx="1"/>
