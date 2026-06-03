@@ -1121,53 +1121,150 @@ h2.sec-title {
 </section>
 
 <!-- ══════════════════════════════════════════════════════
-     S2 — PROBLEM
+     S6B — 解決什麼問題（人→機器人，空白鍵揭示）
 ══════════════════════════════════════════════════════ -->
-<section class="slide" id="s2">
+<section class="slide" id="s6b">
   <div>
-    <span class="act-label">第一幕 · 問題定義 · 0:00–3:30</span>
-    <h2 class="sec-title">為什麼這件事<span class="accent">很難？</span></h2>
+    <span class="act-label">定位 · 我們解決什麼問題</span>
+    <h2 class="sec-title">解決什麼<span class="accent">問題？</span></h2>
+    <div class="robot-reveal" style="font-size:clamp(17px,2.2vw,26px);font-weight:700;color:var(--purple);margin-top:10px">除了用在人，還有機器人！</div>
   </div>
 
-  <div class="prob-grid" style="margin-top:28px">
-    <div class="stat-big">
-      <span class="n" id="prob-n">3,700</span>
-      <span class="u">萬+</span>
-      <div class="desc">
-        全球每年需就醫的跌倒事故（WHO）<br>
-        <span style="color:var(--orange)">現有方案太慢、太貴、難部署</span>
-      </div>
-      <div style="margin-top:18px;padding:16px;background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.2);border-radius:10px;font-size:13px;color:var(--dim);line-height:1.8">
-        長照機構 · 獨居老人 · 工廠安全<br>
-        每一秒都是關鍵
+  <!-- 重新定位 -->
+  <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:15px 20px;margin:18px 0 16px;font-size:15px;line-height:1.85;color:var(--text)">
+    我們做的不是「跌倒偵測器」——是一套通用能力：<strong class="accent">從 IMU 即時、可解釋地理解運動狀態</strong>，跑在<strong class="green">你已經擁有的硬體</strong>上、完全離線。跌倒，只是最貼近人的第一個應用。
+  </div>
+
+  <!-- 人 vs 機器人 -->
+  <div style="display:flex;gap:14px;align-items:stretch;margin-bottom:16px">
+    <div style="flex:1;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:12px;padding:18px 20px">
+      <div style="font-size:32px;margin-bottom:6px">🧍</div>
+      <div style="font-size:17px;font-weight:700;color:var(--cyan);margin-bottom:8px">人 · 手機</div>
+      <div style="font-size:13.5px;color:var(--text);line-height:2">
+        跌倒 → <strong style="color:var(--cyan)">求救</strong><br>
+        警笛 ＋ 自動撥號<br>
+        <span style="color:var(--dim)">獨居長者 · 長照 · 工安</span>
       </div>
     </div>
 
-    <ul class="prob-items">
-      <li class="prob-item">
-        <span class="ico">☁</span>
-        <div>
-          <span class="prob-head">雲端方案</span>
-          <span class="prob-desc">感測器 → 伺服器 → 警報<br>延遲 <strong style="color:var(--orange)">200–800ms</strong>，頭已撞地</span>
-        </div>
-      </li>
-      <li class="prob-item">
-        <span class="ico">⚙</span>
-        <div>
-          <span class="prob-head">傳統 Edge</span>
-          <span class="prob-desc">Jetson Nano + Raspberry Pi + 客製 MCU<br><strong style="color:var(--orange)">採購成本高、整合複雜、難維護</strong></span>
-        </div>
-      </li>
-      <li class="prob-item">
-        <span class="ico">🎯</span>
-        <div>
-          <span class="prob-head">我們的問題意識</span>
-          <span class="prob-desc">能否用<strong style="color:var(--cyan)">口袋裡的設備</strong>完成即時偵測？<br>不買新硬體 · 不上雲 · 毫秒等級回應</span>
-        </div>
-      </li>
-    </ul>
+    <div class="robot-reveal" style="display:flex;gap:14px;flex:1;align-items:stretch">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:64px">
+      <span style="font-size:11px;color:var(--dim)">同一條</span>
+      <span style="font-size:30px;color:var(--green);font-weight:300">≡</span>
+      <span style="font-size:11px;color:var(--dim)">pipeline</span>
+    </div>
+
+    <div style="flex:1;background:rgba(155,109,255,.07);border:1px solid var(--purple);border-radius:12px;padding:18px 20px">
+      <div style="font-size:32px;margin-bottom:6px">🤖</div>
+      <div style="font-size:17px;font-weight:700;color:var(--purple);margin-bottom:8px">人形機器人 · 車載</div>
+      <div style="font-size:13.5px;color:var(--text);line-height:2">
+        失衡 → <strong style="color:var(--purple)">自保</strong><br>
+        護身倒法 · 卸馬達扭力 · 提早爬起<br>
+        <span style="color:var(--dim)">Optimus / Figure / Unitree 都在跌</span>
+      </div>
+    </div>
+    </div>
   </div>
-  <div class="cue-bar">跌倒 + 警報後轉到此頁 — 「先退一步說為什麼這件事很難」</div>
+
+  <!-- 共用核心 -->
+  <div class="dataset-bar robot-reveal" style="margin-bottom:16px">
+    <strong style="color:var(--green)">兩邊共用同一套核心</strong>
+    <span>6 軸 IMU 時序</span>
+    <span>輕量模型 · 端側即時</span>
+    <span>離線 · 0 額外硬體</span>
+    <span style="margin-left:auto;color:var(--cyan)">設計即可解釋</span>
+  </div>
+
+  <!-- 三理由（隨機器人一起揭示）-->
+  <div class="robot-reveal" style="display:flex;gap:12px">
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 15px">
+      <div style="font-size:12.5px;color:var(--cyan);font-weight:700;margin-bottom:6px">① 同問題，換身體</div>
+      <div style="font-size:12.5px;color:var(--dim);line-height:1.75">機器人全身 IMU，而且一直跌。偵測失衡，就是它的自保反射。</div>
+    </div>
+    <div style="flex:1;background:var(--bg2);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:13px 15px">
+      <div style="font-size:12.5px;color:var(--orange);font-weight:700;margin-bottom:6px">② 不可能上雲</div>
+      <div style="font-size:12.5px;color:var(--dim);line-height:1.75">雲端來回 200–800ms，回來時已摔壞。端側次毫秒是硬需求，不是加分。</div>
+    </div>
+    <div style="flex:1;background:var(--bg2);border:1px solid rgba(0,230,118,.3);border-radius:10px;padding:13px 15px">
+      <div style="font-size:12.5px;color:var(--green);font-weight:700;margin-bottom:6px">③ 可解釋＝安全</div>
+      <div style="font-size:12.5px;color:var(--dim);line-height:1.75">能卸馬達的反射必須可稽核。DU 每層＝一次數學步，黑盒給不了。</div>
+    </div>
+  </div>
+
+  <div class="cue-bar">講稿：先講「人」——跌倒求救；按空白鍵 →「除了用在人，還有機器人！」帶出機器人＋三理由。守住「偵測≠預測」。</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S-NOW — 現有做法 ✗ 缺點（左現況，空白鍵→右紅字）
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s-now">
+  <div>
+    <span class="act-label">現況 · 為什麼還沒被好好解決</span>
+    <h2 class="sec-title">現有做法，<span class="accent">差在哪？</span></h2>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px;margin-top:22px;flex:1;justify-content:center">
+
+    <!-- 監視器 -->
+    <div style="display:flex;gap:12px;align-items:stretch">
+      <div style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px">
+        <span style="font-size:32px">📹</span>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text)">監視器／影像辨識</div>
+          <div style="font-size:12px;color:var(--dim);margin-top:3px">在環境裝鏡頭，靠影像判斷跌倒</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;color:var(--dim);font-size:20px">→</div>
+      <div class="robot-reveal" style="flex:1;background:rgba(255,59,48,.06);border:1px solid var(--red);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">⚠</span>
+        <div style="font-size:13px;color:var(--red);line-height:1.7">
+          <strong>隱私疑慮</strong>——浴室臥室能裝嗎？<br>
+          <strong>死角＋固定點</strong>，跌在鏡頭外就漏掉
+        </div>
+      </div>
+    </div>
+
+    <!-- 專用硬體 -->
+    <div style="display:flex;gap:12px;align-items:stretch">
+      <div style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px">
+        <span style="font-size:32px">🔌</span>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text)">專用硬體／穿戴裝置</div>
+          <div style="font-size:12px;color:var(--dim);margin-top:3px">Jetson／樹莓派／跌倒手環等專用品</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;color:var(--dim);font-size:20px">→</div>
+      <div class="robot-reveal" style="flex:1;background:rgba(255,59,48,.06);border:1px solid var(--red);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">⚠</span>
+        <div style="font-size:13px;color:var(--red);line-height:1.7">
+          <strong>部署成本高</strong>——要採購、整合、維護<br>
+          <strong>拓展性低</strong>，每人一台、還要記得戴與充電
+        </div>
+      </div>
+    </div>
+
+    <!-- 雲端方案 -->
+    <div style="display:flex;gap:12px;align-items:stretch">
+      <div style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px">
+        <span style="font-size:32px">☁️</span>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text)">雲端方案</div>
+          <div style="font-size:12px;color:var(--dim);margin-top:3px">感測資料上傳伺服器判斷，再回傳警報</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;color:var(--dim);font-size:20px">→</div>
+      <div class="robot-reveal" style="flex:1;background:rgba(255,59,48,.06);border:1px solid var(--red);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">⚠</span>
+        <div style="font-size:13px;color:var(--red);line-height:1.7">
+          <strong>延遲 200–800ms</strong>——頭早就撞地了<br>
+          <strong>斷網就失效</strong>，還得靠穩定網路
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="cue-bar">左邊講完三個現況 → 按空白鍵 → 右邊三張紅卡（缺點）一起跳出 → 再按換頁</div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════
@@ -1243,79 +1340,6 @@ h2.sec-title {
     <span style="margin-left:auto;color:var(--cyan)">Stratified split · 無 data leakage</span>
   </div>
   <div class="cue-bar">「不是二值判斷，是後驗機率——讓我們針對場景調整 threshold」</div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     S6B — BEYOND FALLS · 人形機器人（應用延伸）
-══════════════════════════════════════════════════════ -->
-<section class="slide" id="s6b">
-  <div>
-    <span class="act-label">應用延伸 · Beyond Fall Detection</span>
-    <h2 class="sec-title">不只是人 — <span class="accent">同一套智能，兩種身體</span></h2>
-  </div>
-
-  <!-- 重新定位 -->
-  <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:15px 20px;margin:18px 0 16px;font-size:15px;line-height:1.85;color:var(--text)">
-    我們做的不是「跌倒偵測器」——是一套通用能力：<strong class="accent">從 IMU 即時、可解釋地理解運動狀態</strong>，跑在<strong class="green">你已經擁有的硬體</strong>上、完全離線。跌倒，只是最貼近人的第一個應用。
-  </div>
-
-  <!-- 人 vs 機器人 -->
-  <div style="display:flex;gap:14px;align-items:stretch;margin-bottom:16px">
-    <div style="flex:1;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:12px;padding:18px 20px">
-      <div style="font-size:32px;margin-bottom:6px">🧍</div>
-      <div style="font-size:17px;font-weight:700;color:var(--cyan);margin-bottom:8px">人 · 手機</div>
-      <div style="font-size:13.5px;color:var(--text);line-height:2">
-        跌倒 → <strong style="color:var(--cyan)">求救</strong><br>
-        警笛 ＋ 自動撥號<br>
-        <span style="color:var(--dim)">獨居長者 · 長照 · 工安</span>
-      </div>
-    </div>
-
-    <div class="robot-reveal" style="display:flex;gap:14px;flex:1;align-items:stretch">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:64px">
-      <span style="font-size:11px;color:var(--dim)">同一條</span>
-      <span style="font-size:30px;color:var(--green);font-weight:300">≡</span>
-      <span style="font-size:11px;color:var(--dim)">pipeline</span>
-    </div>
-
-    <div style="flex:1;background:rgba(155,109,255,.07);border:1px solid var(--purple);border-radius:12px;padding:18px 20px">
-      <div style="font-size:32px;margin-bottom:6px">🤖</div>
-      <div style="font-size:17px;font-weight:700;color:var(--purple);margin-bottom:8px">人形機器人 · 車載</div>
-      <div style="font-size:13.5px;color:var(--text);line-height:2">
-        失衡 → <strong style="color:var(--purple)">自保</strong><br>
-        護身倒法 · 卸馬達扭力 · 提早爬起<br>
-        <span style="color:var(--dim)">Optimus / Figure / Unitree 都在跌</span>
-      </div>
-    </div>
-    </div>
-  </div>
-
-  <!-- 共用核心（頁4 在 DU 之前，先不丟具體數字／DU 名詞，當動機伏筆）-->
-  <div class="dataset-bar robot-reveal" style="margin-bottom:16px">
-    <strong style="color:var(--green)">兩邊共用同一套核心</strong>
-    <span>6 軸 IMU 時序</span>
-    <span>輕量模型 · 端側即時</span>
-    <span>離線 · 0 額外硬體</span>
-    <span style="margin-left:auto;color:var(--cyan)">設計即可解釋</span>
-  </div>
-
-  <!-- 三理由（隨機器人一起揭示）-->
-  <div class="robot-reveal" style="display:flex;gap:12px">
-    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 15px">
-      <div style="font-size:12.5px;color:var(--cyan);font-weight:700;margin-bottom:6px">① 同問題，換身體</div>
-      <div style="font-size:12.5px;color:var(--dim);line-height:1.75">機器人全身 IMU，而且一直跌。偵測失衡，就是它的自保反射。</div>
-    </div>
-    <div style="flex:1;background:var(--bg2);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:13px 15px">
-      <div style="font-size:12.5px;color:var(--orange);font-weight:700;margin-bottom:6px">② 不可能上雲</div>
-      <div style="font-size:12.5px;color:var(--dim);line-height:1.75">雲端來回 200–800ms，回來時已摔壞。端側次毫秒是硬需求，不是加分。</div>
-    </div>
-    <div style="flex:1;background:var(--bg2);border:1px solid rgba(0,230,118,.3);border-radius:10px;padding:13px 15px">
-      <div style="font-size:12.5px;color:var(--green);font-weight:700;margin-bottom:6px">③ 可解釋＝安全</div>
-      <div style="font-size:12.5px;color:var(--dim);line-height:1.75">能卸馬達的反射必須可稽核。DU 每層＝一次數學步，黑盒給不了。</div>
-    </div>
-  </div>
-
-  <div class="cue-bar">講稿：人用來求救，機器人用來自保——兩邊都不必加硬體。這是路線圖，不是已完成（守住「偵測≠預測」）。</div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════
@@ -1877,6 +1901,7 @@ let cur = 0;
 let punchShown  = false;
 let noHwShown   = false;
 let robotShown  = false;
+let flawShown   = false;
 let closingRan  = false;
 let barsRan     = false;
 let animating   = false; // 防止切換動畫期間重複觸發
@@ -1979,6 +2004,11 @@ function onEnter(n) {
   if (SLIDES[n] && SLIDES[n].id === 's6b') {
     robotShown = false;
     document.querySelectorAll('#s6b .robot-reveal').forEach(el => el.classList.remove('show'));
+  }
+  // s-now：左現況先顯示，右缺點待空白鍵帶出
+  if (SLIDES[n] && SLIDES[n].id === 's-now') {
+    flawShown = false;
+    document.querySelectorAll('#s-now .robot-reveal').forEach(el => el.classList.remove('show'));
   }
   // s7（原 s7）：佛偈逐行顯示
   if (SLIDES[n] && SLIDES[n].id === 's7') {
@@ -2441,6 +2471,12 @@ document.addEventListener('keydown', e => {
     if (SLIDES[cur] && SLIDES[cur].id === 's6b' && !robotShown) {
       document.querySelectorAll('#s6b .robot-reveal').forEach(el => el.classList.add('show'));
       robotShown = true;
+      return;
+    }
+    // s-now：Space 先帶出右邊三個缺點（紅）
+    if (SLIDES[cur] && SLIDES[cur].id === 's-now' && !flawShown) {
+      document.querySelectorAll('#s-now .robot-reveal').forEach(el => el.classList.add('show'));
+      flawShown = true;
       return;
     }
     // s7（佛偈）：Space 先顯示 punchline
