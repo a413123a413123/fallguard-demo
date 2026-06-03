@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>跌倒偵測 Edge AI 系統 — 北大比賽 2026</title>
+<title>跌倒偵測 Edge AI 系統 — 台北大學競賽 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -314,7 +314,7 @@ h2.sec-title {
 }
 .bar-fill.b-trt  { background: linear-gradient(90deg,#00b8d9,#00e076); }
 .bar-fill.b-onnx::after {
-  content: '3.9×';
+  content: '5.7×';
   position: absolute; right: 10px; top: 50%;
   transform: translateY(-50%);
   font-size: 11px; font-weight: 800;
@@ -858,39 +858,29 @@ h2.sec-title {
   </div>
 
   <div class="bench-hero">
-    <span class="bh-num">0.17<span style="font-size:.45em;font-weight:300;color:var(--dim)"> ms</span></span>
-    <span class="bh-sub">比眨眼快 <strong class="green">2,000 倍</strong> &nbsp;·&nbsp; 單筆推論中位數（500 次取樣）</span>
+    <span class="bh-num">0.34<span style="font-size:.45em;font-weight:300;color:var(--dim)"> ms</span></span>
+    <span class="bh-sub">純 CPU · <strong class="green">不需 GPU</strong> &nbsp;·&nbsp; 單筆推論中位數（500 次取樣）</span>
   </div>
 
   <div class="chart" id="bench-chart">
     <div class="bar-row">
       <span class="bar-name dim-c">PyTorch CPU</span>
       <div class="bar-track"><div class="bar-fill b-cpu" data-w="100"></div></div>
-      <span class="bar-ms dim-c">0.659 ms &nbsp;(1×)</span>
+      <span class="bar-ms dim-c">1.95 ms &nbsp;(1×)</span>
     </div>
     <div class="bar-row">
-      <span class="bar-name">PyTorch GPU</span>
-      <div class="bar-track"><div class="bar-fill b-pgpu" data-w="66.8"></div></div>
-      <span class="bar-ms">0.440 ms &nbsp;(1.5×)</span>
-    </div>
-    <div class="bar-row">
-      <span class="bar-name" style="color:var(--green);font-weight:700">ONNX CUDA ★</span>
-      <div class="bar-track"><div class="bar-fill b-onnx" data-w="25.6"></div></div>
-      <span class="bar-ms hi">0.169 ms &nbsp;(3.9×)</span>
-    </div>
-    <div class="bar-row">
-      <span class="bar-name dim-c">ONNX TRT-FP16</span>
-      <div class="bar-track"><div class="bar-fill b-trt" data-w="27.6"></div></div>
-      <span class="bar-ms dim-c">0.182 ms &nbsp;(3.6×)</span>
+      <span class="bar-name" style="color:var(--green);font-weight:700">ONNX Runtime CPU ★</span>
+      <div class="bar-track"><div class="bar-fill b-onnx" data-w="17.4"></div></div>
+      <span class="bar-ms hi">0.34 ms &nbsp;(5.7× 最快)</span>
     </div>
   </div>
 
   <div class="bench-note">
-    <span>測試環境：單筆推論 · ONNX Runtime CUDA EP · 500次中位數</span>
+    <span>測試環境：單筆推論 · ONNX Runtime CPU EP · 500 次中位數</span>
     <span>·</span>
-    <span>模型：846 KB ONNX（浮點 FP32）</span>
+    <span>Intel i7-12700 · 純 CPU（不依賴 GPU）</span>
     <span>·</span>
-    <span>TRT warm-up 已排除</span>
+    <span>warm-up 5 次已排除</span>
   </div>
   <div class="cue-bar">「這不是 batch 推論的數字——是真實單筆、邊緣場景的數字」</div>
 </section>
@@ -965,7 +955,7 @@ h2.sec-title {
     <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
       <div style="font-size:11px;color:var(--green);margin-bottom:6px;letter-spacing:1px">⚡ 關鍵數字</div>
       <div style="font-size:13px;color:var(--text);line-height:1.8">
-        推論延遲 <strong style="color:var(--green)">0.34ms</strong>（手機 CPU 約 5ms）<br>
+        手機端推論約 <strong style="color:var(--green)">5ms</strong>（桌面 ONNX 0.34ms）<br>
         從跌倒到警報 <strong style="color:var(--green)">＜ 0.5 秒</strong><br>
         完全離線，<strong style="color:var(--cyan)">0 網路需求</strong>
       </div>

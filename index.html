@@ -1247,6 +1247,77 @@ h2.sec-title {
 </section>
 
 <!-- ══════════════════════════════════════════════════════
+     S6B — BEYOND FALLS · 人形機器人（應用延伸）
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s6b">
+  <div>
+    <span class="act-label">應用延伸 · Beyond Fall Detection</span>
+    <h2 class="sec-title">不只是人 — <span class="accent">同一套智能，兩種身體</span></h2>
+  </div>
+
+  <!-- 重新定位 -->
+  <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:15px 20px;margin:18px 0 16px;font-size:15px;line-height:1.85;color:var(--text)">
+    我們做的不是「跌倒偵測器」——是一套通用能力：<strong class="accent">從 IMU 即時、可解釋地理解運動狀態</strong>，跑在<strong class="green">你已經擁有的硬體</strong>上、完全離線。跌倒，只是最貼近人的第一個應用。
+  </div>
+
+  <!-- 人 vs 機器人 -->
+  <div style="display:flex;gap:14px;align-items:stretch;margin-bottom:16px">
+    <div style="flex:1;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:12px;padding:18px 20px">
+      <div style="font-size:32px;margin-bottom:6px">🧍</div>
+      <div style="font-size:17px;font-weight:700;color:var(--cyan);margin-bottom:8px">人 · 手機</div>
+      <div style="font-size:13.5px;color:var(--text);line-height:2">
+        跌倒 → <strong style="color:var(--cyan)">求救</strong><br>
+        警笛 ＋ 自動撥號<br>
+        <span style="color:var(--dim)">獨居長者 · 長照 · 工安</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:64px">
+      <span style="font-size:11px;color:var(--dim)">同一條</span>
+      <span style="font-size:30px;color:var(--green);font-weight:300">≡</span>
+      <span style="font-size:11px;color:var(--dim)">pipeline</span>
+    </div>
+
+    <div style="flex:1;background:rgba(155,109,255,.07);border:1px solid var(--purple);border-radius:12px;padding:18px 20px">
+      <div style="font-size:32px;margin-bottom:6px">🤖</div>
+      <div style="font-size:17px;font-weight:700;color:var(--purple);margin-bottom:8px">人形機器人 · 車載</div>
+      <div style="font-size:13.5px;color:var(--text);line-height:2">
+        失衡 → <strong style="color:var(--purple)">自保</strong><br>
+        護身倒法 · 卸馬達扭力 · 提早爬起<br>
+        <span style="color:var(--dim)">Optimus / Figure / Unitree 都在跌</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 共用核心（頁4 在 DU 之前，先不丟具體數字／DU 名詞，當動機伏筆）-->
+  <div class="dataset-bar" style="margin-bottom:16px">
+    <strong style="color:var(--green)">兩邊共用同一套核心</strong>
+    <span>6 軸 IMU 時序</span>
+    <span>輕量模型 · 端側即時</span>
+    <span>離線 · 0 額外硬體</span>
+    <span style="margin-left:auto;color:var(--cyan)">設計即可解釋</span>
+  </div>
+
+  <!-- 三理由 -->
+  <div style="display:flex;gap:12px">
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 15px">
+      <div style="font-size:12.5px;color:var(--cyan);font-weight:700;margin-bottom:6px">① 同問題，換身體</div>
+      <div style="font-size:12.5px;color:var(--dim);line-height:1.75">機器人全身 IMU，而且一直跌。偵測失衡，就是它的自保反射。</div>
+    </div>
+    <div style="flex:1;background:var(--bg2);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:13px 15px">
+      <div style="font-size:12.5px;color:var(--orange);font-weight:700;margin-bottom:6px">② 不可能上雲</div>
+      <div style="font-size:12.5px;color:var(--dim);line-height:1.75">雲端來回 200–800ms，回來時已摔壞。端側次毫秒是硬需求，不是加分。</div>
+    </div>
+    <div style="flex:1;background:var(--bg2);border:1px solid rgba(0,230,118,.3);border-radius:10px;padding:13px 15px">
+      <div style="font-size:12.5px;color:var(--green);font-weight:700;margin-bottom:6px">③ 可解釋＝安全</div>
+      <div style="font-size:12.5px;color:var(--dim);line-height:1.75">能卸馬達的反射必須可稽核。DU 每層＝一次數學步，黑盒給不了。</div>
+    </div>
+  </div>
+
+  <div class="cue-bar">講稿：人用來求救，機器人用來自保——兩邊都不必加硬體。這是路線圖，不是已完成（守住「偵測≠預測」）。</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
      S3B — DEEP UNFOLDING + XAI
 ══════════════════════════════════════════════════════ -->
 <section class="slide" id="s3b">
@@ -1490,7 +1561,7 @@ h2.sec-title {
     <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
       <div style="font-size:11px;color:var(--green);margin-bottom:6px;letter-spacing:1px">⚡ 關鍵數字</div>
       <div style="font-size:13px;color:var(--text);line-height:1.8">
-        推論延遲 <strong style="color:var(--green)">0.17ms</strong>（手機 CPU 約 5ms）<br>
+        桌面推論 <strong style="color:var(--green)">0.34ms</strong>　·　手機端約 5ms<br>
         從跌倒到警報 <strong style="color:var(--green)">＜ 0.5 秒</strong><br>
         完全離線，<strong style="color:var(--cyan)">0 網路需求</strong>
       </div>
@@ -1678,7 +1749,7 @@ h2.sec-title {
         <div class="hw3d-dot" style="background:var(--cyan)"></div>
         <div class="hw3d-info">
           <span class="hw3d-name accent">SoC &nbsp;·&nbsp; CPU &nbsp;·&nbsp; GPU &nbsp;·&nbsp; NPU</span>
-          <span class="hw3d-sub" style="color:var(--cyan)">✦ ONNX Runtime 在這裡推論 · 0.34ms</span>
+          <span class="hw3d-sub" style="color:var(--cyan)">✦ ONNX Runtime 在這裡推論 · 端側約 5ms</span>
         </div>
       </div>
       <div class="hw3d-item hw3d-gold" data-idx="2">
@@ -1692,7 +1763,7 @@ h2.sec-title {
         <div class="hw3d-dot" style="background:#00663a"></div>
         <div class="hw3d-info">
           <span class="hw3d-name">Battery</span>
-          <span class="hw3d-sub">功耗可忽略 · 推論僅 0.34ms</span>
+          <span class="hw3d-sub">功耗可忽略 · 端側推論約 5ms</span>
         </div>
       </div>
       <div class="hw3d-item" data-idx="4">
