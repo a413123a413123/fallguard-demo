@@ -239,9 +239,10 @@ h2.sec-title {
 .purple  { color: var(--purple); }
 .dim-c   { color: var(--dim); }
 .cue-bar {
+  display: none;  /* 提詞條：投影片上不顯示（原始碼保留，供你私下當提詞參考）*/
   position: absolute; bottom: 22px; left: 80px; right: 80px;
   font-size: 11px; color: var(--dim);
-  display: flex; align-items: center; gap: 8px;
+  align-items: center; gap: 8px;
 }
 .cue-bar::before {
   content: '▸'; color: var(--cyan); flex-shrink: 0;
@@ -1612,34 +1613,16 @@ h2.sec-title {
   <div class="s5-body">
     <!-- 左側：原有架構圖 + demo modes -->
     <div class="s5-left">
-      <div class="demo-grid">
-        <!-- Phone -->
-        <div class="dev-card">
-          <span class="dev-ico">📱</span>
-          <span class="dev-name">Android 手機</span>
-          <div class="dev-role">
-            <strong style="color:var(--cyan)">感測器節點</strong><br>
-            200Hz IMU 串流<br>
-            加速度計 + 陀螺儀<br>
-            <span style="font-size:11px">6-channel 原始數據</span>
-          </div>
-        </div>
-
-        <!-- Arrow -->
-        <div class="arr-col">
-          <div class="arr-line"></div>
-          <span class="arr-txt">WiFi / USB<br>低延遲</span>
-        </div>
-
-        <!-- Laptop -->
+      <div class="demo-grid" style="grid-template-columns:1fr">
+        <!-- Phone · 端側一條龍 -->
         <div class="dev-card glow">
-          <span class="dev-ico">💻</span>
-          <span class="dev-name green">筆電 GPU</span>
+          <span class="dev-ico">📱</span>
+          <span class="dev-name green">Android 手機 · 端側一條龍</span>
           <div class="dev-role">
-            <strong style="color:var(--green)">推論節點</strong><br>
-            ONNX Runtime CUDA EP<br>
-            0.34ms · Warp Particle FX<br>
-            <span style="font-size:11px">Grad-CAM 注意力可視化</span>
+            <strong style="color:var(--cyan)">感測 → 推論 → 警報，全在手機上</strong><br>
+            200Hz IMU（加速度計＋陀螺儀）<br>
+            FallHybridDU @ ONNX Runtime（手機 CPU）<br>
+            <span style="font-size:11px;color:var(--green)">完全離線 · 0 雲端 · 0 額外硬體</span>
           </div>
           <div class="alarm-pill">🚨 FALL DETECTED</div>
         </div>
