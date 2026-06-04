@@ -1219,7 +1219,7 @@ h2.sec-title {
       <div class="robot-reveal" style="flex:1;background:rgba(255,59,48,.06);border:1px solid var(--red);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px">
         <span style="font-size:22px">⚠</span>
         <div style="font-size:13px;color:var(--red);line-height:1.7">
-          <strong>隱私疑慮</strong>——浴室臥室能裝嗎？<br>
+          <strong>隱私疑慮</strong>——臥室能裝嗎？<br>
           <strong>死角＋固定點</strong>，跌在鏡頭外就漏掉
         </div>
       </div>
@@ -1269,254 +1269,8 @@ h2.sec-title {
 </section>
 
 <!-- ══════════════════════════════════════════════════════
-     S3 — DATA & MODEL
+     S4B — DEMO 橋段（接下來你將看到什麼）
 ══════════════════════════════════════════════════════ -->
-<section class="slide" id="s3">
-  <div>
-    <span class="act-label">第三幕 · 工程師模式 · 3:30–5:00</span>
-    <h2 class="sec-title">資料集與<span class="accent">模型架構</span></h2>
-  </div>
-
-  <div class="arch-wrap">
-    <div class="ab">
-      <span class="ab-t">Input</span>
-      <span class="ab-s">200×6<br>200Hz IMU</span>
-    </div>
-    <span class="ab-arr">→</span>
-    <div class="ab">
-      <span class="ab-t">Conv1D ①</span>
-      <span class="ab-s">32 filters<br>k=7, ReLU</span>
-    </div>
-    <span class="ab-arr">→</span>
-    <div class="ab">
-      <span class="ab-t">Conv1D ②</span>
-      <span class="ab-s">64 filters<br>k=5, ReLU</span>
-    </div>
-    <span class="ab-arr">→</span>
-    <div class="ab">
-      <span class="ab-t">GlobalAvgPool</span>
-      <span class="ab-s">時序壓縮</span>
-    </div>
-    <span class="ab-arr">→</span>
-    <div class="ab">
-      <span class="ab-t">FC + Sigmoid</span>
-      <span class="ab-s">跌倒機率<br>[0, 1]</span>
-    </div>
-    <span class="ab-arr">→</span>
-    <div class="ab" style="border-color:rgba(0,230,118,.4);background:rgba(0,230,118,.05)">
-      <span class="ab-t green">ONNX Export</span>
-      <span class="ab-s">846 KB<br>CUDA EP</span>
-    </div>
-  </div>
-
-  <div style="text-align:center;font-size:12px;color:var(--dim);margin-bottom:16px">
-    Grad-CAM 1D — 可視化模型注意力時間區間 &nbsp;·&nbsp; 滾動正規化 — 跨設備泛化無需重新訓練
-  </div>
-
-  <div class="model-stats">
-    <div class="msc">
-      <span class="msc-v accent">153,705</span>
-      <span class="msc-l">訓練視窗</span>
-    </div>
-    <div class="msc">
-      <span class="msc-v green">90.9%</span>
-      <span class="msc-l">Accuracy</span>
-    </div>
-    <div class="msc">
-      <span class="msc-v gold">86.6%</span>
-      <span class="msc-l">F1 Score</span>
-    </div>
-    <div class="msc">
-      <span class="msc-v purple">70/15/15</span>
-      <span class="msc-l">Train/Val/Test</span>
-    </div>
-  </div>
-
-  <div class="dataset-bar">
-    <strong>SisFall Dataset</strong>
-    <span>19 受試者</span>
-    <span>15 種跌倒動作</span>
-    <span>34 種日常活動</span>
-    <span>200Hz, 6-channel (Acc + Gyro)</span>
-    <span style="margin-left:auto;color:var(--cyan)">Stratified split · 無 data leakage</span>
-  </div>
-  <div class="cue-bar">「不是二值判斷，是後驗機率——讓我們針對場景調整 threshold」</div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     S3B — DEEP UNFOLDING + XAI
-══════════════════════════════════════════════════════ -->
-<section class="slide" id="s3b">
-  <div>
-    <span class="act-label">第三幕 · 技術創新 · Deep Unfolding</span>
-    <h2 class="sec-title">為什麼 <span class="accent">Deep Unfolding</span>？</h2>
-  </div>
-
-  <!-- 痛點 vs 解法 對比卡 -->
-  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
-    <div style="flex:1;min-width:260px;background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:16px">
-      <div style="font-size:11px;color:var(--orange);letter-spacing:1px;margin-bottom:10px">❌ 1D-CNN 的問題</div>
-      <div style="font-size:13px;color:var(--text);line-height:2">
-        架構是<strong style="color:var(--orange)">人工拍板</strong>：幾層？幾個 filter？為什麼 k=7？<br>
-        特徵 z 是<strong style="color:var(--orange)">黑盒</strong>：學到什麼不知道<br>
-        可解釋性只能靠 Grad-CAM <em>事後補救</em>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--cyan);min-width:36px">→</div>
-    <div style="flex:1;min-width:260px;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:10px;padding:16px">
-      <div style="font-size:11px;color:var(--cyan);letter-spacing:1px;margin-bottom:10px">✓ Deep Unfolding 的設計直覺</div>
-      <div style="font-size:13px;color:var(--text);line-height:2">
-        架構從<strong style="color:var(--cyan)">數學推導而來</strong>：把解稀疏優化的迭代展開<br>
-        每一層 = <strong style="color:var(--cyan)">一次 ISTA 更新步</strong>，不是憑感覺堆<br>
-        可解釋性是<strong style="color:var(--cyan)">設計本身的一部份</strong>
-      </div>
-    </div>
-  </div>
-
-  <!-- 公式對應：算法迭代 ≡ 網路層 -->
-  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin-bottom:16px">
-    <div style="flex:1;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px">
-      <div style="font-size:11px;color:var(--dim);margin-bottom:8px">ISTA 迭代式（解 min ½‖x−Dz‖²+λ‖z‖₁）</div>
-      <div style="font-family:monospace;font-size:14px;color:var(--text);line-height:2">
-        zᵏ⁺¹ = soft<span class="accent">λ</span>( <span style="color:var(--gold)">W₁</span>·x + <span style="color:var(--gold)">W₂</span>·zᵏ )<br>
-        <span style="font-size:11px;color:var(--dim)">每次迭代：往稀疏解方向靠近一步</span>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;min-width:60px">
-      <span style="font-size:26px;color:var(--cyan)">≡</span>
-      <span style="font-size:10px;color:var(--dim);text-align:center">迭代步 k<br>⇄<br>網路層 ℓ</span>
-    </div>
-    <div style="flex:1;min-width:280px;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:10px;padding:14px">
-      <div style="font-size:11px;color:var(--cyan);margin-bottom:8px">展開為神經網路（嵌入 1D-CNN，K=5 層）</div>
-      <div style="font-family:monospace;font-size:14px;color:var(--text);line-height:2">
-        zᵏ⁺¹ = soft<span class="accent">θₖ</span>( <span style="color:var(--cyan)">Wₑ</span>·x + <span style="color:var(--cyan)">Sₖ</span>·zᵏ )<br>
-        <span style="font-size:11px;color:var(--cyan)">W₁→Wₑ · W₂→Sₖ · λ→θₖ 全部可學習</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 關鍵訊息 bar -->
-  <div class="dataset-bar">
-    <strong style="color:var(--cyan)">設計直覺一句話</strong>
-    <span>把「解稀疏問題的迭代算法」<strong style="color:var(--text)">展開</strong>成固定層數的神經網路</span>
-    <span>參數 <span style="color:var(--cyan)">Wₑ / Sₖ / θₖ</span> 由資料學習，但每層的<strong style="color:var(--text)">角色</strong>由數學決定</span>
-    <span style="margin-left:auto;color:var(--green)">架構不是拍腦袋 · 是從問題結構推導出來的</span>
-  </div>
-    <div class="cue-bar">
-    📢 <strong>講稿：</strong>「同樣在疊層，但 1D-CNN 的架構是拍腦袋——我不知道為什麼是兩層 Conv、為什麼 k=7。
-    Deep Unfolding 的思路是：我有一個稀疏優化問題，解它的迭代算法叫 ISTA，把這個算法展開成固定 K 步，每一步就是一層網路。架構是從數學推出來的。」
-  </div>
-</section>
-
-<!-- ══ S3C：Deep Unfolding — 帶來的提升（是什麼） ══ -->
-<section class="slide" id="s3c">
-  <div>
-    <span class="act-label">第三幕 · 技術創新 · Deep Unfolding 優勢</span>
-    <h2 class="sec-title">Deep Unfolding 帶來的<span class="accent">三大提升</span></h2>
-  </div>
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-    <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid rgba(0,230,118,.4);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
-      <div style="font-size:11px;color:var(--green);letter-spacing:1px">① Accuracy +2.3%</div>
-      <div style="font-size:32px;font-weight:700;color:var(--green)">93.22%</div>
-      <div style="font-size:11px;color:var(--dim)">vs baseline 90.9%</div>
-      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">DU 稀疏模組精煉 CNN 特徵，<strong style="color:var(--green)">減少雜訊干擾</strong></div>
-    </div>
-    <div style="flex:1;min-width:180px;background:var(--bg2);border:2px solid rgba(255,59,48,.5);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
-      <div style="font-size:11px;color:var(--red);letter-spacing:1px">② Recall +6.2% ← 最關鍵</div>
-      <div style="font-size:32px;font-weight:700;color:var(--red)">93.17%</div>
-      <div style="font-size:11px;color:var(--dim)">vs baseline 87.0%</div>
-      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">每 100 次跌倒<strong style="color:var(--red)">少漏報 6 次</strong>，稀疏特徵保留跌倒動作關鍵點</div>
-    </div>
-    <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid rgba(255,208,96,.35);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
-      <div style="font-size:11px;color:var(--gold);letter-spacing:1px">③ F1 +3.7%</div>
-      <div style="font-size:32px;font-weight:700;color:var(--gold)">90.29%</div>
-      <div style="font-size:11px;color:var(--dim)">vs baseline 86.62%</div>
-      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">精度與召回率<strong style="color:var(--gold)">同步提升</strong>，不是犧牲一方換另一方</div>
-    </div>
-  </div>
-  <div style="font-size:13px;color:var(--cyan);font-weight:700;letter-spacing:1px;margin-bottom:8px">📊 Ablation Study　<span style="color:var(--dim);font-weight:400;font-size:11px">逐步加組件、相同流程重訓 · SisFall 測試集真實數據</span></div>
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;font-size:12px">
-    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;background:var(--bg3);padding:8px 0">
-      <div style="color:var(--dim);text-align:left;padding-left:14px">Configuration</div>
-      <div style="color:var(--dim)">Accuracy</div>
-      <div style="color:var(--dim)">F1</div>
-      <div style="color:var(--dim)">Sparsity</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;color:var(--dim);text-align:left;padding-left:14px">A. 1D-CNN (baseline)</div><div style="padding:9px">90.9%</div><div style="padding:9px">86.6%</div><div style="padding:9px;color:var(--dim)">—</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;color:var(--dim);text-align:left;padding-left:14px">B. + Deep Unfolding</div><div style="padding:9px;color:var(--green)">92.1%</div><div style="padding:9px;color:var(--green)">88.8%</div><div style="padding:9px;color:var(--dim)">~0%</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;border-top:1px solid var(--cyan);background:rgba(0,212,255,.08)">
-      <div style="padding:9px;color:var(--cyan);font-weight:700;text-align:left;padding-left:14px">C. + L1 sparsity　★ Full</div><div style="padding:9px;color:var(--cyan);font-weight:700">93.2%</div><div style="padding:9px;color:var(--cyan);font-weight:700">90.3%</div><div style="padding:9px;color:var(--cyan);font-weight:700">86%</div>
-    </div>
-  </div>
-  <div class="dataset-bar">
-    <strong style="color:var(--red)">Recall 是跌倒偵測最關鍵的指標</strong>
-    <span>漏報 = 跌倒沒被發現 = 生命危險</span>
-    <span>FallHybridDU：Recall 93.17%，每 100 次跌倒少漏報 6 次</span>
-    <span style="margin-left:auto;color:var(--green)">CNN + DU 嵌入模組 · 準確率真正提升 · 手機端側部署</span>
-  </div>
-  <div class="cue-bar">
-    講稿：「這次不是『同精度但更小』——是真正的提升。FallHybridDU 準確率 93.2%，比 baseline 高了 2.3%。
-    但更重要的是 Recall：87% 提升到 93.2%，意思是每 100 次真實跌倒，這個模型多救了 6 個。
-    為什麼？DU 模組在 CNN 特徵之上做稀疏精煉，把不相關的雜訊濾掉，讓後端的 CNN 更容易判斷。
-    這才是『演算法優化讓模型更好』的真正意思。」
-  </div>
-</section>
-<section class="slide" id="s4">
-  <div>
-    <span class="act-label">核心數據 · Model Comparison</span>
-    <h2 class="sec-title">完整模型<span class="accent">效能對比</span></h2>
-  </div>
-
-  <div class="bench-hero">
-    <span class="bh-num">93.2<span style="font-size:.45em;font-weight:300;color:var(--dim)"> %</span></span>
-    <span class="bh-sub">Deep Unfolding 在所有方法中 <strong class="green">Accuracy / F1 雙料第一</strong> &nbsp;·&nbsp; SisFall 測試集真實數據</span>
-  </div>
-
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px">
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;background:var(--bg3)">
-      <div style="padding:9px;font-size:12px;color:var(--dim);text-align:left;padding-left:16px">Model</div>
-      <div style="padding:9px;font-size:12px;color:var(--dim)">Accuracy</div>
-      <div style="padding:9px;font-size:12px;color:var(--dim)">F1</div>
-    </div>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">SVM</div>
-      <div style="padding:9px;font-size:13px">79.9%</div>
-      <div style="padding:9px;font-size:13px">67.0%</div>
-    </div>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">Random Forest</div>
-      <div style="padding:9px;font-size:13px">84.7%</div>
-      <div style="padding:9px;font-size:13px">73.0%</div>
-    </div>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">XGBoost</div>
-      <div style="padding:9px;font-size:13px">84.7%</div>
-      <div style="padding:9px;font-size:13px">73.2%</div>
-    </div>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
-      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">1D-CNN</div>
-      <div style="padding:9px;font-size:13px">90.9%</div>
-      <div style="padding:9px;font-size:13px">86.6%</div>
-    </div>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--cyan);background:rgba(0,212,255,.08)">
-      <div style="padding:9px;font-size:13px;color:var(--cyan);font-weight:700;text-align:left;padding-left:16px">1D-CNN × Deep Unfolding　★</div>
-      <div style="padding:9px;font-size:13px;color:var(--cyan);font-weight:700">93.2%</div>
-      <div style="padding:9px;font-size:13px;color:var(--cyan);font-weight:700">90.3%</div>
-    </div>
-  </div>
-
-  <div class="bench-note">
-    <span>SisFall 測試集 · stratified 70/15/15 · 無 data leakage</span>
-    <span>·</span>
-    <span>Deep Unfolding：純 CPU <strong style="color:var(--cyan)">0.34ms</strong> · 709KB · 86% 稀疏可解釋</span>
-  </div>
-  <div class="cue-bar">「跟所有方法比——從傳統 SVM 到深度 1D-CNN——Deep Unfolding 的 Accuracy 和 F1 都是第一」</div>
-</section>
-
 <section class="slide" id="s4b">
   <div>
     <span class="act-label">第四幕 · Demo 前說明</span>
@@ -1594,6 +1348,259 @@ h2.sec-title {
   <div class="cue-bar">
     📢 <strong>講稿：</strong>「我來示範一個場景——有人跌倒了。注意看右上角的機率數字，從接近零開始，隨著動作加劇往上爬。
     當他撞到地板那一刻，機率衝過門檻，系統立刻觸發警報。這整個過程，發生在手機上，離線，0.5 秒以內。」
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S4 — MODEL COMPARISON
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s4">
+  <div>
+    <span class="act-label">核心數據 · Model Comparison</span>
+    <h2 class="sec-title">完整模型<span class="accent">效能對比</span></h2>
+  </div>
+
+  <div class="bench-hero">
+    <span class="bh-num">93.2<span style="font-size:.45em;font-weight:300;color:var(--dim)"> %</span></span>
+    <span class="bh-sub">Deep Unfolding 在所有方法中 <strong class="green">Accuracy / F1 雙料第一</strong> &nbsp;·&nbsp; SisFall 測試集真實數據</span>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;background:var(--bg3)">
+      <div style="padding:9px;font-size:12px;color:var(--dim);text-align:left;padding-left:16px">Model</div>
+      <div style="padding:9px;font-size:12px;color:var(--dim)">Accuracy</div>
+      <div style="padding:9px;font-size:12px;color:var(--dim)">F1</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">SVM</div>
+      <div style="padding:9px;font-size:13px">79.9%</div>
+      <div style="padding:9px;font-size:13px">67.0%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">Random Forest</div>
+      <div style="padding:9px;font-size:13px">84.7%</div>
+      <div style="padding:9px;font-size:13px">73.0%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">XGBoost</div>
+      <div style="padding:9px;font-size:13px">84.7%</div>
+      <div style="padding:9px;font-size:13px">73.2%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;font-size:13px;color:var(--dim);text-align:left;padding-left:16px">1D-CNN</div>
+      <div style="padding:9px;font-size:13px">90.9%</div>
+      <div style="padding:9px;font-size:13px">86.6%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;text-align:center;border-top:1px solid var(--cyan);background:rgba(0,212,255,.08)">
+      <div style="padding:9px;font-size:13px;color:var(--cyan);font-weight:700;text-align:left;padding-left:16px">1D-CNN × Deep Unfolding　★</div>
+      <div style="padding:9px;font-size:13px;color:var(--cyan);font-weight:700">93.2%</div>
+      <div style="padding:9px;font-size:13px;color:var(--cyan);font-weight:700">90.3%</div>
+    </div>
+  </div>
+
+  <div class="bench-note">
+    <span>SisFall 測試集 · stratified 70/15/15 · 無 data leakage</span>
+    <span>·</span>
+    <span>Deep Unfolding：純 CPU <strong style="color:var(--cyan)">0.34ms</strong> · 709KB · 86% 稀疏可解釋</span>
+  </div>
+  <div class="cue-bar">「跟所有方法比——從傳統 SVM 到深度 1D-CNN——Deep Unfolding 的 Accuracy 和 F1 都是第一」</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S3 — DATA & MODEL
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s3">
+  <div>
+    <span class="act-label">第三幕 · 工程師模式 · 3:30–5:00</span>
+    <h2 class="sec-title">資料集與<span class="accent">模型架構</span></h2>
+  </div>
+
+  <div class="arch-wrap">
+    <div class="ab">
+      <span class="ab-t">Input</span>
+      <span class="ab-s">200×6<br>200Hz IMU</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab">
+      <span class="ab-t">Conv1D 前端</span>
+      <span class="ab-s">6→32, k=7<br>BN + ReLU</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab" style="border-color:var(--purple);background:rgba(155,109,255,.1)">
+      <span class="ab-t" style="color:var(--purple)">Deep Unfolding ★</span>
+      <span class="ab-s">K=5 展開 ISTA<br>64 atoms · 稀疏</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab">
+      <span class="ab-t">Conv1D 後端</span>
+      <span class="ab-s">64, k=5<br>+ MaxPool</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab">
+      <span class="ab-t">GAP + FC</span>
+      <span class="ab-s">Sigmoid<br>跌倒機率</span>
+    </div>
+    <span class="ab-arr">→</span>
+    <div class="ab" style="border-color:rgba(0,230,118,.4);background:rgba(0,230,118,.05)">
+      <span class="ab-t green">ONNX Export</span>
+      <span class="ab-s">709 KB<br>FallHybridDU</span>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:var(--dim);margin-bottom:16px">
+    Deep Unfolding 稀疏編碼 — 設計即可解釋（非 Grad-CAM 事後近似）&nbsp;·&nbsp; 滾動正規化 — 跨設備泛化無需重新訓練
+  </div>
+
+  <div class="model-stats">
+    <div class="msc">
+      <span class="msc-v accent">153,705</span>
+      <span class="msc-l">訓練視窗</span>
+    </div>
+    <div class="msc">
+      <span class="msc-v green">93.2%</span>
+      <span class="msc-l">Accuracy</span>
+    </div>
+    <div class="msc">
+      <span class="msc-v gold">90.3%</span>
+      <span class="msc-l">F1 Score</span>
+    </div>
+    <div class="msc">
+      <span class="msc-v purple">70/15/15</span>
+      <span class="msc-l">Train/Val/Test</span>
+    </div>
+  </div>
+
+  <div class="dataset-bar">
+    <strong>SisFall Dataset</strong>
+    <span>19 受試者</span>
+    <span>15 種跌倒動作</span>
+    <span>34 種日常活動</span>
+    <span>200Hz, 6-channel (Acc + Gyro)</span>
+    <span style="margin-left:auto;color:var(--cyan)">Stratified split · 無 data leakage</span>
+  </div>
+  <div class="cue-bar">「不是二值判斷，是後驗機率——讓我們針對場景調整 threshold」</div>
+</section>
+
+<!-- ══ S3C：Deep Unfolding — 帶來的提升（是什麼） ══ -->
+<section class="slide" id="s3c">
+  <div>
+    <span class="act-label">第三幕 · 技術創新 · Deep Unfolding 優勢</span>
+    <h2 class="sec-title">Deep Unfolding 帶來的<span class="accent">三大提升</span></h2>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid rgba(0,230,118,.4);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--green);letter-spacing:1px">① Accuracy +2.3%</div>
+      <div style="font-size:32px;font-weight:700;color:var(--green)">93.22%</div>
+      <div style="font-size:11px;color:var(--dim)">vs baseline 90.9%</div>
+      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">DU 稀疏模組精煉 CNN 特徵，<strong style="color:var(--green)">減少雜訊干擾</strong></div>
+    </div>
+    <div style="flex:1;min-width:180px;background:var(--bg2);border:2px solid rgba(255,59,48,.5);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--red);letter-spacing:1px">② Recall +6.2% ← 最關鍵</div>
+      <div style="font-size:32px;font-weight:700;color:var(--red)">93.17%</div>
+      <div style="font-size:11px;color:var(--dim)">vs baseline 87.0%</div>
+      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">每 100 次跌倒<strong style="color:var(--red)">少漏報 6 次</strong>，稀疏特徵保留跌倒動作關鍵點</div>
+    </div>
+    <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid rgba(255,208,96,.35);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;color:var(--gold);letter-spacing:1px">③ F1 +3.7%</div>
+      <div style="font-size:32px;font-weight:700;color:var(--gold)">90.29%</div>
+      <div style="font-size:11px;color:var(--dim)">vs baseline 86.62%</div>
+      <div style="font-size:11px;color:var(--text);border-top:1px solid var(--border);padding-top:6px">精度與召回率<strong style="color:var(--gold)">同步提升</strong>，不是犧牲一方換另一方</div>
+    </div>
+  </div>
+  <div style="font-size:13px;color:var(--cyan);font-weight:700;letter-spacing:1px;margin-bottom:8px">📊 Ablation Study　<span style="color:var(--dim);font-weight:400;font-size:11px">逐步加組件、相同流程重訓 · SisFall 測試集真實數據</span></div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;font-size:12px">
+    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;background:var(--bg3);padding:8px 0">
+      <div style="color:var(--dim);text-align:left;padding-left:14px">Configuration</div>
+      <div style="color:var(--dim)">Accuracy</div>
+      <div style="color:var(--dim)">F1</div>
+      <div style="color:var(--dim)">Sparsity</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim);text-align:left;padding-left:14px">A. 1D-CNN (baseline)</div><div style="padding:9px">90.9%</div><div style="padding:9px">86.6%</div><div style="padding:9px;color:var(--dim)">—</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;border-top:1px solid var(--border)">
+      <div style="padding:9px;color:var(--dim);text-align:left;padding-left:14px">B. + Deep Unfolding</div><div style="padding:9px;color:var(--green)">92.1%</div><div style="padding:9px;color:var(--green)">88.8%</div><div style="padding:9px;color:var(--dim)">~0%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.9fr 1fr 1fr 1fr;text-align:center;border-top:1px solid var(--cyan);background:rgba(0,212,255,.08)">
+      <div style="padding:9px;color:var(--cyan);font-weight:700;text-align:left;padding-left:14px">C. + L1 sparsity　★ Full</div><div style="padding:9px;color:var(--cyan);font-weight:700">93.2%</div><div style="padding:9px;color:var(--cyan);font-weight:700">90.3%</div><div style="padding:9px;color:var(--cyan);font-weight:700">86%</div>
+    </div>
+  </div>
+  <div class="dataset-bar">
+    <strong style="color:var(--red)">Recall 是跌倒偵測最關鍵的指標</strong>
+    <span>漏報 = 跌倒沒被發現 = 生命危險</span>
+    <span>FallHybridDU：Recall 93.17%，每 100 次跌倒少漏報 6 次</span>
+    <span style="margin-left:auto;color:var(--green)">CNN + DU 嵌入模組 · 準確率真正提升 · 手機端側部署</span>
+  </div>
+  <div class="cue-bar">
+    講稿：「這次不是『同精度但更小』——是真正的提升。FallHybridDU 準確率 93.2%，比 baseline 高了 2.3%。
+    但更重要的是 Recall：87% 提升到 93.2%，意思是每 100 次真實跌倒，這個模型多救了 6 個。
+    為什麼？DU 模組在 CNN 特徵之上做稀疏精煉，把不相關的雜訊濾掉，讓後端的 CNN 更容易判斷。
+    這才是『演算法優化讓模型更好』的真正意思。」
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S3B — DEEP UNFOLDING + XAI
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s3b">
+  <div>
+    <span class="act-label">第三幕 · 技術創新 · Deep Unfolding</span>
+    <h2 class="sec-title">為什麼 <span class="accent">Deep Unfolding</span>？</h2>
+  </div>
+
+  <!-- 痛點 vs 解法 對比卡 -->
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="flex:1;min-width:260px;background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:16px">
+      <div style="font-size:11px;color:var(--orange);letter-spacing:1px;margin-bottom:10px">❌ 1D-CNN 的問題</div>
+      <div style="font-size:13px;color:var(--text);line-height:2">
+        架構是<strong style="color:var(--orange)">人工拍板</strong>：幾層？幾個 filter？為什麼 k=7？<br>
+        特徵 z 是<strong style="color:var(--orange)">黑盒</strong>：學到什麼不知道<br>
+        可解釋性只能靠 Grad-CAM <em>事後補救</em>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--cyan);min-width:36px">→</div>
+    <div style="flex:1;min-width:260px;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:10px;padding:16px">
+      <div style="font-size:11px;color:var(--cyan);letter-spacing:1px;margin-bottom:10px">✓ Deep Unfolding 的設計直覺</div>
+      <div style="font-size:13px;color:var(--text);line-height:2">
+        架構從<strong style="color:var(--cyan)">數學推導而來</strong>：把解稀疏優化的迭代展開<br>
+        每一層 = <strong style="color:var(--cyan)">一次 ISTA 更新步</strong>，不是憑感覺堆<br>
+        可解釋性是<strong style="color:var(--cyan)">設計本身的一部份</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 公式對應：算法迭代 ≡ 網路層 -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin-bottom:16px">
+    <div style="flex:1;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:8px">ISTA 迭代式（解 min ½‖x−Dz‖²+λ‖z‖₁）</div>
+      <div style="font-family:monospace;font-size:14px;color:var(--text);line-height:2">
+        zᵏ⁺¹ = soft<span class="accent">λ</span>( <span style="color:var(--gold)">W₁</span>·x + <span style="color:var(--gold)">W₂</span>·zᵏ )<br>
+        <span style="font-size:11px;color:var(--dim)">每次迭代：往稀疏解方向靠近一步</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;min-width:60px">
+      <span style="font-size:26px;color:var(--cyan)">≡</span>
+      <span style="font-size:10px;color:var(--dim);text-align:center">迭代步 k<br>⇄<br>網路層 ℓ</span>
+    </div>
+    <div style="flex:1;min-width:280px;background:rgba(0,212,255,.05);border:1px solid var(--cyan);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--cyan);margin-bottom:8px">展開為神經網路（嵌入 1D-CNN，K=5 層）</div>
+      <div style="font-family:monospace;font-size:14px;color:var(--text);line-height:2">
+        zᵏ⁺¹ = soft<span class="accent">θₖ</span>( <span style="color:var(--cyan)">Wₑ</span>·x + <span style="color:var(--cyan)">Sₖ</span>·zᵏ )<br>
+        <span style="font-size:11px;color:var(--cyan)">W₁→Wₑ · W₂→Sₖ · λ→θₖ 全部可學習</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 關鍵訊息 bar -->
+  <div class="dataset-bar">
+    <strong style="color:var(--cyan)">設計直覺一句話</strong>
+    <span>把「解稀疏問題的迭代算法」<strong style="color:var(--text)">展開</strong>成固定層數的神經網路</span>
+    <span>參數 <span style="color:var(--cyan)">Wₑ / Sₖ / θₖ</span> 由資料學習，但每層的<strong style="color:var(--text)">角色</strong>由數學決定</span>
+    <span style="margin-left:auto;color:var(--green)">架構不是拍腦袋 · 是從問題結構推導出來的</span>
+  </div>
+    <div class="cue-bar">
+    📢 <strong>講稿：</strong>「同樣在疊層，但 1D-CNN 的架構是拍腦袋——我不知道為什麼是兩層 Conv、為什麼 k=7。
+    Deep Unfolding 的思路是：我有一個稀疏優化問題，解它的迭代算法叫 ISTA，把這個算法展開成固定 K 步，每一步就是一層網路。架構是從數學推出來的。」
   </div>
 </section>
 
