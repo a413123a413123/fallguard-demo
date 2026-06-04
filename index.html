@@ -1407,71 +1407,47 @@ h2.sec-title {
     <h2 class="sec-title">接下來你將看到<span class="accent">什麼</span></h2>
   </div>
 
-  <!-- 故事場景 -->
-  <div style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.25);border-radius:12px;padding:20px 24px;margin-bottom:18px">
-    <div style="font-size:11px;color:var(--orange);letter-spacing:1.5px;margin-bottom:10px">📍 場景</div>
-    <div style="font-size:16px;color:var(--text);line-height:1.9">
-      一位獨居老人，起身時突然失去重心，<strong style="color:var(--orange)">跌落在地</strong>。<br>
-      口袋裡的手機，在他倒下的<strong style="color:var(--text)"> 0.5 秒內</strong>，偵測到了這件事——<br>
-      <strong style="color:var(--cyan)">不靠網路，不靠任何額外裝置。</strong>
-    </div>
-  </div>
+  <div style="display:flex;gap:24px;flex:1;align-items:stretch;margin-top:14px;min-height:0">
 
-  <!-- Demo 流程時序 -->
-  <div style="display:flex;align-items:stretch;gap:0;margin-bottom:18px">
-
-    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px 0 0 10px;padding:14px;text-align:center">
-      <div style="font-size:22px;margin-bottom:6px">🚶</div>
-      <div style="font-size:12px;font-weight:700;color:var(--text)">正常行走</div>
-      <div style="font-size:11px;color:var(--dim);margin-top:4px">機率 &lt; 5%</div>
-      <div style="margin-top:8px;height:4px;background:var(--green);border-radius:2px;width:30%;margin-left:auto;margin-right:auto"></div>
+    <!-- 左：手機實機畫面 -->
+    <div style="flex:0 0 250px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;gap:10px">
+      <img src="images/app.jpg" alt="FallGuard App 實機畫面" onerror="this.style.display='none'" style="max-width:100%;max-height:calc(100% - 32px);object-fit:contain;border-radius:10px;display:block">
+      <div style="font-size:12px;color:var(--green);font-weight:700;text-align:center">📱 我們已做出的 App 實機畫面</div>
     </div>
 
-    <div style="display:flex;align-items:center;padding:0 6px;color:var(--dim);font-size:18px">→</div>
+    <!-- 右：文字 -->
+    <div style="flex:1;display:flex;flex-direction:column;gap:16px;justify-content:center">
 
-    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);padding:14px;text-align:center">
-      <div style="font-size:22px;margin-bottom:6px">⚠️</div>
-      <div style="font-size:12px;font-weight:700;color:var(--gold)">失去重心</div>
-      <div style="font-size:11px;color:var(--dim);margin-top:4px">機率快速攀升</div>
-      <div style="margin-top:8px;height:4px;background:var(--gold);border-radius:2px;width:60%;margin-left:auto;margin-right:auto"></div>
-    </div>
-
-    <div style="display:flex;align-items:center;padding:0 6px;color:var(--dim);font-size:18px">→</div>
-
-    <div style="flex:1;background:rgba(255,59,48,.08);border:1px solid rgba(255,59,48,.4);padding:14px;text-align:center">
-      <div style="font-size:22px;margin-bottom:6px">💥</div>
-      <div style="font-size:12px;font-weight:700;color:var(--red)">撞地瞬間</div>
-      <div style="font-size:11px;color:var(--dim);margin-top:4px">機率 &gt; 90%</div>
-      <div style="margin-top:8px;height:4px;background:var(--red);border-radius:2px;width:95%;margin-left:auto;margin-right:auto"></div>
-    </div>
-
-    <div style="display:flex;align-items:center;padding:0 6px;color:var(--dim);font-size:18px">→</div>
-
-    <div style="flex:1;background:rgba(255,59,48,.15);border:2px solid var(--red);border-radius:0 10px 10px 0;padding:14px;text-align:center">
-      <div style="font-size:22px;margin-bottom:6px">🚨</div>
-      <div style="font-size:12px;font-weight:700;color:var(--red)">警報觸發</div>
-      <div style="font-size:11px;color:var(--dim);margin-top:4px">警笛 + 撥號</div>
-      <div style="margin-top:8px;height:4px;background:var(--red);border-radius:2px;width:100%;margin-left:auto;margin-right:auto;animation:pulse-bar 1s infinite"></div>
-    </div>
-  </div>
-
-  <!-- 看什麼 -->
-  <div style="display:flex;gap:12px">
-    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
-      <div style="font-size:11px;color:var(--cyan);margin-bottom:6px;letter-spacing:1px">👁 觀察重點</div>
-      <div style="font-size:13px;color:var(--text);line-height:1.8">
-        ① 右上角<strong style="color:var(--cyan)">機率數字</strong>從 0% 開始爬升<br>
-        ② 倒下瞬間機率<strong style="color:var(--red)">衝過 50%</strong><br>
-        ③ 全螢幕紅色警報 + <strong style="color:var(--text)">手機警笛聲</strong>響起
+      <!-- 故事場景 -->
+      <div style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.25);border-radius:12px;padding:18px 22px">
+        <div style="font-size:11px;color:var(--orange);letter-spacing:1.5px;margin-bottom:10px">📍 場景</div>
+        <div style="font-size:16px;color:var(--text);line-height:1.9">
+          一位獨居老人，起身時突然失去重心，<strong style="color:var(--orange)">跌落在地</strong>。<br>
+          口袋裡的手機，在他倒下的<strong style="color:var(--text)"> 0.5 秒內</strong>，偵測到了這件事——<br>
+          <strong style="color:var(--cyan)">不靠網路，不靠任何額外裝置。</strong>
+        </div>
       </div>
-    </div>
-    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
-      <div style="font-size:11px;color:var(--green);margin-bottom:6px;letter-spacing:1px">⚡ 關鍵數字</div>
-      <div style="font-size:13px;color:var(--text);line-height:1.8">
-        桌面推論 <strong style="color:var(--green)">0.34ms</strong>　·　手機端約 5ms<br>
-        從跌倒到警報 <strong style="color:var(--green)">＜ 0.5 秒</strong><br>
-        完全離線，<strong style="color:var(--cyan)">0 網路需求</strong>
+
+      <!-- 看什麼 -->
+      <div style="display:flex;gap:12px">
+        <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-size:11px;color:var(--cyan);margin-bottom:6px;letter-spacing:1px">👁 觀察重點</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.85">
+            ① 右上角<strong style="color:var(--cyan)">機率數字</strong>從 0% 開始爬升<br>
+            ② 倒下瞬間機率<strong style="color:var(--red)">衝過 50%</strong><br>
+            ③ 全螢幕紅色警報 + <strong style="color:var(--text)">手機警笛聲</strong>響起
+          </div>
+        </div>
+        <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-size:11px;color:var(--green);margin-bottom:6px;letter-spacing:1px">⚡ 關鍵數字</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.85">
+            桌面推論 <strong style="color:var(--green)">0.34ms</strong>　·　手機端約 5ms<br>
+            從跌倒到警報 <strong style="color:var(--green)">＜ 0.5 秒</strong><br>
+            完全離線，<strong style="color:var(--cyan)">0 網路需求</strong>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
 
@@ -1608,129 +1584,7 @@ h2.sec-title {
 @keyframes pulse-bar { 0%,100%{opacity:1} 50%{opacity:.3} }
 </style>
 
-<!-- ════════════════════════════════════════════════════<!-- ══════════════════════════════════════════════════════
-     S5 — DEMO ARCHITECTURE
-══════════════════════════════════════════════════════ -->
-<section class="slide" id="s5">
-  <div>
-    <span class="act-label">第四幕 · Demo 說明 · 5:00–6:45</span>
-    <h2 class="sec-title">即時偵測<span class="accent">系統架構</span></h2>
-  </div>
-
-  <div class="s5-body">
-    <!-- 左側：原有架構圖 + demo modes -->
-    <div class="s5-left">
-      <div class="demo-grid" style="grid-template-columns:1fr">
-        <!-- Phone · 端側一條龍 -->
-        <div class="dev-card glow">
-          <span class="dev-ico">📱</span>
-          <span class="dev-name green">Android 手機 · 端側一條龍</span>
-          <div class="dev-role">
-            <strong style="color:var(--cyan)">感測 → 推論 → 警報，全在手機上</strong><br>
-            200Hz IMU（加速度計＋陀螺儀）<br>
-            FallHybridDU @ ONNX Runtime（手機 CPU）<br>
-            <span style="font-size:11px;color:var(--green)">完全離線 · 0 雲端 · 0 額外硬體</span>
-          </div>
-          <div class="alarm-pill">🚨 FALL DETECTED</div>
-        </div>
-      </div>
-
-      <div class="demo-modes">
-        <div class="dm-card">
-          <strong>Simulation Demo (demo_sim.py)</strong>
-          SisFall 資料重播 · NVIDIA Warp 粒子效果 · R 鍵重置 · 機率漸升動畫
-        </div>
-        <div class="dm-card">
-          <strong>Android 即時 Demo (android_imu_demo.py)</strong>
-          真實 IMU 串流 · 本機 GPU 推論 · 閃爍警報 · R 鍵重置
-        </div>
-      </div>
-
-      <!-- 推論日誌 feed（佔滿左側底部） -->
-      <div class="infer-feed" id="infer-feed">
-        <div class="feed-header">┌ LIVE INFERENCE FEED ──────────────────────────────────┐</div>
-        <div class="feed-lines" id="feed-lines">
-          <span class="feed-line dim-c">等待進入此頁面以啟動...</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 右側：儀表盤 -->
-    <div class="s5-right">
-      <div class="gauge-wrap">
-        <div class="gauge-label-top">FALL PROBABILITY</div>
-        <svg viewBox="0 0 200 130" width="160" style="display:block;margin:0 auto">
-          <!-- 背景弧 -->
-          <path d="M 20 110 A 80 80 0 0 1 180 110" stroke="#1a2a3a" stroke-width="14" fill="none"/>
-          <!-- 動態弧 -->
-          <path id="gauge-arc" d="M 20 110 A 80 80 0 0 1 180 110"
-            stroke="#00d4ff" stroke-width="14" fill="none" stroke-linecap="round"
-            stroke-dasharray="0 251"/>
-          <!-- 百分比文字 -->
-          <text x="100" y="85" text-anchor="middle" fill="#00e676" font-size="26" font-weight="700" id="gauge-pct">0%</text>
-          <text x="100" y="105" text-anchor="middle" fill="#7a8fa8" font-size="11">FALL RISK</text>
-        </svg>
-        <div style="font-size:10px;color:var(--dim);margin-top:6px;letter-spacing:1px">
-          進入頁面時自動更新
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="cue-bar">說明完架構後切到實際 demo 視窗 — 結束後回此頁再轉下一幕</div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     S6 — NO HARDWARE
-══════════════════════════════════════════════════════ -->
-<section class="slide" id="s6">
-  <div>
-    <span class="act-label">第五幕 · 核心主張 · 6:45–8:00</span>
-    <h2 class="sec-title">消滅<span class="accent">專用硬體</span></h2>
-  </div>
-
-  <div class="nohw-grid">
-    <!-- Others -->
-    <div class="hw-card">
-      <span class="hw-title" style="color:var(--orange)">競品思路</span>
-      <ul class="hw-list">
-        <li><span class="i">🖥</span> Jetson Nano / Orin</li>
-        <li><span class="i">🔌</span> Raspberry Pi CM4</li>
-        <li><span class="i">💾</span> 客製化 MCU</li>
-        <li><span class="i">📦</span> 整合、焊接、驅動程式</li>
-        <li><span class="i">💰</span> 額外採購 + 維護成本</li>
-      </ul>
-      <div class="hw-bottom" style="font-size:13px;color:var(--dim);margin-top:14px">
-        目標：<em>「把專用硬體做更小更省電」</em>
-      </div>
-    </div>
-
-    <div class="vs-col">VS</div>
-
-    <!-- Us -->
-    <div class="hw-card ours">
-      <span class="hw-title green">我們的主張</span>
-      <ul class="hw-list">
-        <li><span class="i">📱</span> <span style="color:var(--text)">手機（已有 CPU / GPU / NPU）</span></li>
-        <li><span class="i">🤖</span> <span style="color:var(--text)">機器人（已有運算模組）</span></li>
-        <li><span class="i">⌚</span> <span style="color:var(--text)">穿戴裝置（已有感測器）</span></li>
-        <li><span class="i">✅</span> ONNX Runtime Android SDK</li>
-        <li><span class="i">✅</span> 零額外採購</li>
-      </ul>
-      <div class="hw-bottom">
-        <div class="size-badge">709 KB</div>
-        <div style="font-size:13px;color:var(--dim);margin-top:10px">
-          主張：<em style="color:var(--green)">「消滅專用硬體需求」</em>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="nohw-headline" id="nohw-hl">
-    你的口袋裡，已經有了一台跌倒偵測機。
-  </div>
-  <div class="cue-bar">按空白鍵顯示結語 · 下一張是硬體解構</div>
-</section>
+<!-- s5（即時偵測架構）與 s6（消滅硬體）已移除；其重點併入倒數第二頁「我們的優點」 -->
 
 <!-- ══════════════════════════════════════════════════════
      S7 — HARDWARE EXPLODED VIEW
@@ -1837,6 +1691,51 @@ h2.sec-title {
     <span class="kbd">Space</span> 繼續
   </div>
   <div class="cue-bar">念完偈子後按空白鍵 — 讓結語在評審眼前浮現</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     S-ADV — 我們的優點（總結）
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="s-adv">
+  <div>
+    <span class="act-label">總結 · 我們的優勢</span>
+    <h2 class="sec-title">六大<span class="accent">關鍵優勢</span></h2>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:11px;flex:1;justify-content:center;margin-top:12px">
+
+    <div style="display:flex;align-items:center;gap:18px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:13px 22px">
+      <div style="font-size:27px;font-weight:700;color:var(--cyan);flex:0 0 34px;text-align:center">1</div>
+      <div><span style="font-size:18px;font-weight:700;color:var(--text)">小</span><span style="font-size:13px;color:var(--dim);margin-left:14px">整個模型只有 <strong style="color:var(--cyan)">709 KB</strong>，塞得進任何裝置</span></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:18px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:13px 22px">
+      <div style="font-size:27px;font-weight:700;color:var(--cyan);flex:0 0 34px;text-align:center">2</div>
+      <div><span style="font-size:18px;font-weight:700;color:var(--text)">不用網路</span><span style="font-size:13px;color:var(--dim);margin-left:14px"><strong style="color:var(--text)">完全離線</strong>運作，不需任何連線，資料不外流</span></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:18px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:13px 22px">
+      <div style="font-size:27px;font-weight:700;color:var(--cyan);flex:0 0 34px;text-align:center">3</div>
+      <div><span style="font-size:18px;font-weight:700;color:var(--text)">不用額外硬體</span><span style="font-size:13px;color:var(--dim);margin-left:14px">用你<strong style="color:var(--text)">已經有的手機</strong>，零採購、零穿戴</span></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:18px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:13px 22px">
+      <div style="font-size:27px;font-weight:700;color:var(--cyan);flex:0 0 34px;text-align:center">4</div>
+      <div><span style="font-size:18px;font-weight:700;color:var(--text)">快 · 不上雲</span><span style="font-size:13px;color:var(--dim);margin-left:14px">端側即時推論，<strong style="color:var(--text)">資料不上傳雲端</strong>，跌倒到警報 &lt; 0.5 秒</span></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:18px;background:rgba(0,230,118,.05);border:1px solid rgba(0,230,118,.4);border-radius:12px;padding:13px 22px">
+      <div style="font-size:27px;font-weight:700;color:var(--green);flex:0 0 34px;text-align:center">5</div>
+      <div><span style="font-size:18px;font-weight:700;color:var(--green)">已完整建構</span><span style="font-size:13px;color:var(--dim);margin-left:14px">真的做成 App、能跑能 demo——<strong style="color:var(--green)">不是概念</strong></span></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:18px;background:rgba(255,208,96,.05);border:1px solid rgba(255,208,96,.4);border-radius:12px;padding:13px 22px">
+      <div style="font-size:27px;font-weight:700;color:var(--gold);flex:0 0 34px;text-align:center">6</div>
+      <div><span style="font-size:18px;font-weight:700;color:var(--gold)">演算法高可信度</span><span style="font-size:13px;color:var(--dim);margin-left:14px">Deep Unfolding <strong style="color:var(--text)">白盒展開</strong>，每層對應一步數學最佳化、決策可解釋</span></div>
+    </div>
+
+  </div>
+  <div class="cue-bar">六大優勢收尾——小、不用網路、不用硬體、快又不上雲、真的做出來、白盒演算法高可信度。第5、6點最能拉開距離。</div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════
