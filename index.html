@@ -1795,10 +1795,6 @@ h2.sec-title {
      S8 — BUDDHIST QUOTE
 ══════════════════════════════════════════════════════ -->
 <section class="slide" id="s7">
-  <div style="position:absolute;top:32px;left:80px">
-    <div class="tag" style="border-color:var(--gold);color:var(--gold)">哲學境界 · 8:00–9:00</div>
-  </div>
-
   <div class="buddha-row">
     <div class="monk-box shexiu">
       <span class="monk-name">神秀 — 競品思路</span>
@@ -1831,7 +1827,7 @@ h2.sec-title {
   </div>
 
   <div class="space-hint" id="space-hint">
-    <span class="kbd">Space</span> 顯示結語
+    <span class="kbd">Space</span> 繼續
   </div>
   <div class="cue-bar">念完偈子後按空白鍵 — 讓結語在評審眼前浮現</div>
 </section>
@@ -1885,6 +1881,7 @@ let punchShown  = false;
 let noHwShown   = false;
 let robotShown  = false;
 let flawShown   = false;
+let huinengShown = false;
 let closingRan  = false;
 let barsRan     = false;
 let animating   = false; // 防止切換動畫期間重複觸發
@@ -1996,9 +1993,10 @@ function onEnter(n) {
   // s7（原 s7）：佛偈逐行顯示
   if (SLIDES[n] && SLIDES[n].id === 's7') {
     punchShown = false;
+    huinengShown = false;
     document.getElementById('punchline').classList.remove('show');
     document.getElementById('space-hint').classList.remove('hidden');
-    runPoemLines(); // 逐行顯示詩句
+    runPoemLines(); // 只逐行顯示神秀；慧能待空白鍵
   }
   // s8（原 s8）：結語動畫
   if (SLIDES[n] && SLIDES[n].id === 's8') runClosing();
@@ -2287,17 +2285,19 @@ function runPoemLines() {
     ['sx3',  800],
     ['sx4', 1100],
     ['sx-sub', 1500],
-    ['hn1', 1800],
-    ['hn2', 2100],
-    ['hn3', 2400],
-    ['hn4', 2700],
-    ['hn-sub', 3100],
   ];
   seq.forEach(([id, ms]) => {
     setTimeout(() => {
       const el = document.getElementById(id);
       if (el) el.classList.add('show');
     }, ms);
+  });
+}
+
+// 空白鍵帶出慧能（逐行）
+function revealHuineng() {
+  [['hn1',0],['hn2',250],['hn3',500],['hn4',750],['hn-sub',1100]].forEach(([id, ms]) => {
+    setTimeout(() => { const el = document.getElementById(id); if (el) el.classList.add('show'); }, ms);
   });
 }
 
@@ -2462,12 +2462,15 @@ document.addEventListener('keydown', e => {
       flawShown = true;
       return;
     }
-    // s7（佛偈）：Space 先顯示 punchline
-    if (SLIDES[cur] && SLIDES[cur].id === 's7' && !punchShown) {
-      document.getElementById('punchline').classList.add('show');
-      document.getElementById('space-hint').classList.add('hidden');
-      punchShown = true;
-      return;
+    // s7（佛偈）：Space① 帶出慧能 → Space② 顯示 punchline
+    if (SLIDES[cur] && SLIDES[cur].id === 's7') {
+      if (!huinengShown) { revealHuineng(); huinengShown = true; return; }
+      if (!punchShown) {
+        document.getElementById('punchline').classList.add('show');
+        document.getElementById('space-hint').classList.add('hidden');
+        punchShown = true;
+        return;
+      }
     }
     nav(1);
     return;
